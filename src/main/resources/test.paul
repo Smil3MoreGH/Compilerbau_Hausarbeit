@@ -1,0 +1,19 @@
+var x = 10;
+var y = 20;
+
+fun add(a, b) {
+    var result = a + b;
+    return result;
+}
+
+var sum = add(x, y);
+
+if (sum > 25) {
+    sum = sum - 5;
+} else {
+    sum = sum + 5;
+}
+
+while (sum > 0) {
+    sum = sum - 1;
+}
