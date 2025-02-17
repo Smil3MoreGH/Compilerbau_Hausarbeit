@@ -31,7 +31,9 @@ public class Parser {
     }
 
     private ASTNode parseStatement() {
-        if (match(TokenType.VAR)) {
+        if (lookAhead(TokenType.IDENTIFIER) && lookAhead(1, TokenType.ASSIGN)) {
+            return parseAssignment();
+        } else if (match(TokenType.VAR)) {
             return parseAssignment();
         } else if (match(TokenType.FUN)) {
             return parseFunctionDefinition();
@@ -39,8 +41,6 @@ public class Parser {
             return parseIfElse();
         } else if (match(TokenType.WHILE)) {
             return parseWhile();
-        } else if (lookAhead(TokenType.IDENTIFIER) && lookAhead(1, TokenType.ASSIGN)) {
-            return parseAssignment();
         } else if (lookAhead(TokenType.IDENTIFIER) && lookAhead(1, TokenType.LPAREN)) {
             return parseFunctionCall();
         } else {
@@ -49,7 +49,7 @@ public class Parser {
     }
 
     private ASTNode parseAssignment() {
-        consume(TokenType.VAR, "Erwartet 'var'");
+        boolean hasVar = match(TokenType.VAR);  // `var` ist optional
         Token identifier = consume(TokenType.IDENTIFIER, "Erwartet einen Variablennamen");
         consume(TokenType.ASSIGN, "Erwartet '='");
         ASTNode expression = parseExpression();
@@ -59,9 +59,23 @@ public class Parser {
     }
 
     private ASTNode parseExpression() {
-        // Ein sehr vereinfachtes Beispiel für den Ausdrucksparser
-        Token token = consume(TokenType.NUMBER, "Erwartet eine Zahl");
-        return new ExpressionNode(token.getValue());
+        ASTNode left;
+
+        if (match(TokenType.NUMBER)) {
+            left = new ExpressionNode(tokens.get(position - 1).getValue());
+        } else if (match(TokenType.IDENTIFIER)) {
+            left = new ExpressionNode(tokens.get(position - 1).getValue());
+        } else {
+            throw new RuntimeException("Erwartet Zahl oder Variable in Zeile " + peek().getLine());
+        }
+
+        while (match(TokenType.PLUS) || match(TokenType.MINUS) || match(TokenType.MULT) || match(TokenType.DIV)) {
+            Token operator = tokens.get(position - 1);
+            ASTNode right = parseExpression();
+            left = new BinaryExpressionNode(left, operator.getValue(), right);
+        }
+
+        return left;
     }
 
     private ASTNode parseFunctionDefinition() {
