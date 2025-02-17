@@ -1,3 +1,105 @@
+# PAUL (Parsing And Understanding Language)
+
+Die Programmiersprache **PAUL** (**P**arsing **A**nd **U**nderstanding **L**anguage) ist eine selbst entwickelte funktionale Programmiersprache, die im Rahmen der Hausarbeit im Modul Compilerbau realisiert wird. Sie basiert auf einer kontextfreien Grammatik und wird mit einem rekursiven Abstieg-Parser verarbeitet. Ziel der Sprache ist es, ein tiefgehendes Verständnis für Compilerbau, lexikalische Analyse, syntaktische Analyse sowie Codegenerierung zu erlangen.
+
+## 📜 Kontextfreie Grammatik (CFG) für PAUL
+
+### **🔹 Programmstruktur**
+```plaintext
+<Programm> ::= <Anweisung> | <Anweisung> <Programm>
+```
+➡ Ein **Programm** besteht aus einer **Liste von Anweisungen**.
+
+### **🔹 Anweisungen**
+```plaintext
+<Anweisung> ::= <Zuweisung> ";"  
+              | <FunktionsDefinition>  
+              | <FunktionsAufruf> ";"  
+              | <Kontrollstruktur>  
+              | <Ausdruck> ";"
+```
+➡ Eine **Anweisung** kann eine **Zuweisung, Funktionsdefinition, Kontrollstruktur oder einen Ausdruck** enthalten.
+
+### **🔹 Zuweisungen**
+```plaintext
+<Zuweisung> ::= "var" <Identifikator> "=" <Ausdruck> ";"
+              | <Identifikator> "=" <Ausdruck> ";"
+```
+➡ Variablen können **deklariert und zugewiesen** werden.
+
+### **🔹 Funktionen**
+```plaintext
+<FunktionsDefinition> ::= "fun" <Identifikator> "(" <ParameterListe> ")" "{" <Programm> "}"
+
+<FunktionsAufruf> ::= <Identifikator> "(" <ArgumentListe> ")" ";"
+```
+➡ PAUL unterstützt **Funktionen mit Parametern** und **Funktionsaufrufe**.
+
+### **🔹 Parameter und Argumente**
+```plaintext
+<ParameterListe> ::= <Identifikator> "," <ParameterListe> | <Identifikator> | <Epsilon>
+
+<ArgumentListe> ::= <Ausdruck> "," <ArgumentListe> | <Ausdruck> | <Epsilon>
+```
+➡ Eine **Funktion** kann **beliebig viele Parameter und Argumente** haben.
+
+### **🔹 Kontrollstrukturen**
+```plaintext
+<Kontrollstruktur> ::= "if" "(" <Bedingung> ")" "{" <Programm> "}" ["else" "{" <Programm> "}"]  
+                     | "while" "(" <Bedingung> ")" "{" <Programm> "}"
+```
+➡ **Bedingte Anweisungen (`if-else`) und Schleifen (`while`)** sind erlaubt.
+
+### **🔹 Bedingungen und Vergleichsoperatoren**
+```plaintext
+<Bedingung> ::= <Ausdruck> <Vergleichsoperator> <Ausdruck>
+
+<Vergleichsoperator> ::= "==" | "!=" | "<" | ">" | "<=" | ">="
+```
+➡ Bedingungen bestehen aus zwei **Ausdrücken** und einem **Vergleichsoperator**.
+
+### **🔹 Arithmetische Operationen**
+```plaintext
+<Ausdruck> ::= <Term> <Rechenoperation>
+
+<Rechenoperation> ::= "+" <Term> <Rechenoperation>  
+                     | "-" <Term> <Rechenoperation>  
+                     | <Epsilon>
+```
+➡ Ein **Ausdruck** kann eine **Addition oder Subtraktion** enthalten.
+
+### **🔹 Multiplikation und Division**
+```plaintext
+<Term> ::= <Faktor> <MultDiv>
+
+<MultDiv> ::= "*" <Faktor> <MultDiv>  
+            | "/" <Faktor> <MultDiv>  
+            | <Epsilon>
+```
+➡ **Multiplikation und Division** werden hier definiert.
+
+### **🔹 Zahlen, Variablen und Funktionsaufrufe**
+```plaintext
+<Faktor> ::= <Identifikator>  
+           | <Zahl>  
+           | "(" <Ausdruck> ")"  
+           | <FunktionsAufruf>
+
+<Identifikator> ::= [a-zA-Z_][a-zA-Z0-9_]*
+
+<Zahl> ::= [0-9]+
+```
+➡ Ein **Faktor** kann eine **Variable, Zahl, Klammer-Ausdruck oder einen Funktionsaufruf** sein.
+
+### **🔹 Epsilon (leeres Wort)**
+```plaintext
+<Epsilon> ::= ε
+```
+➡ Epsilon repräsentiert **optionale Regeln oder leere Werte**.
+
+
+---
+
 # ✅ Checkliste für die Hausarbeit Compilerbau
 
 ## 🔹 Planung & Definition der Sprache
@@ -24,7 +126,7 @@
 - **Eingabe:** Syntaxbaum (AST)
 - **Ausgabe:** Zwischencode (Stack-Maschinen-Code)
 - **Methode:** AST-Traversierung + Übersetzung in Stack-Befehle
-- **Beispiel-Zwischencode:**  
+- **Beispiel-Zwischencode:**
   ```assembly
   LOAD x
   PUSH 10
