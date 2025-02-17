@@ -45,15 +45,9 @@
 - **Codeerzeugung-Test:** Zwischencode überprüfen
 - **Kellermaschinen-Test:** Programmausführung simulieren
 
-### 7️⃣ Dokumentation & Präsentation für das Kolloquium vorbereiten
+---
+
+## 7️⃣ Dokumentation & Präsentation für das Kolloquium vorbereiten
 - **Code-Dokumentation (Kommentare & Architekturübersicht)**
 - **Ergebnisse & Herausforderungen beschreiben**
 - **Demo des Compilers vorbereiten**
-
----
-
-## 🎯 Bonus: Empfohlene Tools & Frameworks
-- **Java für die Implementierung**
-- **JUnit für Unit-Tests**
-- **ANTLR oder JavaCC (optional für Scanner/Parser)**
-- **Graphviz (optional für AST-Visualisierung)**
