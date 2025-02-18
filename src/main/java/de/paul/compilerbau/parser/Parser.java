@@ -70,7 +70,14 @@ public class Parser {
         // 5) Function Call: identifier (
         else if (lookAhead(TokenType.IDENTIFIER) && lookAhead(1, TokenType.LPAREN)) {
             System.out.println("FunctionCall erkannt! -> parseFunctionCall()");
-            return parseFunctionCall();
+            Token functionName = consume(TokenType.IDENTIFIER, "Erwartet Funktionsnamen für Funktionsaufruf");
+            return parseFunctionCall(functionName);
+        }
+
+        // 6) Return-Statement
+        else if (lookAhead(TokenType.RETURN)) {
+            System.out.println("RETURN erkannt! -> parseReturn()");
+            return parseReturn();
         }
 
         // Wenn nichts passt, ist es ein Fehler:
@@ -90,20 +97,22 @@ public class Parser {
      *   - ';'
      */
     private ASTNode parseAssignment() {
-        // 'var' ist optional; match() gibt true zurück, wenn der Token da ist, und erhöht position
+        System.out.println("parseAssignment(): Position " + position);
+
         boolean hasVar = match(TokenType.VAR);
+        System.out.println("hasVar = " + hasVar);
 
-        // Jetzt MUSS ein Bezeichner kommen:
         Token identifier = consume(TokenType.IDENTIFIER, "Erwartet einen Variablennamen");
+        System.out.println("Identifier = " + identifier.getValue());
 
-        // Jetzt MUSS '=' kommen:
         consume(TokenType.ASSIGN, "Erwartet '='");
+        System.out.println("Gefunden: '='");
 
-        // Dann ein Ausdruck:
         ASTNode expression = parseExpression();
+        System.out.println("Expression parsed: " + expression);
 
-        // Und schließlich ';'
         consume(TokenType.SEMI, "Erwartet ';'");
+        System.out.println("Gefunden: ';'");
 
         return new AssignmentNode(identifier.getValue(), expression);
     }
@@ -114,80 +123,119 @@ public class Parser {
      *  bei komplexeren Ausdrücken führen. Als Demonstration reicht es aber.
      */
     private ASTNode parseExpression() {
+        System.out.println("parseExpression(): Position " + position);
         ASTNode left;
 
-        // Erstes Element MUSS eine Zahl ODER ein Bezeichner sein
+        // Erstes Element MUSS eine Zahl, ein Bezeichner oder ein Funktionsaufruf sein
         if (match(TokenType.NUMBER)) {
             left = new ExpressionNode(tokens.get(position - 1).getValue());
+            System.out.println("Zahl erkannt: " + left);
         } else if (match(TokenType.IDENTIFIER)) {
-            left = new ExpressionNode(tokens.get(position - 1).getValue());
+            Token identifier = tokens.get(position - 1);
+
+            // Falls danach eine öffnende Klammer kommt -> Funktionsaufruf
+            if (lookAhead(TokenType.LPAREN)) {
+                System.out.println("Funktionsaufruf in Expression erkannt!");
+                left = parseFunctionCall(identifier);
+            } else {
+                left = new ExpressionNode(identifier.getValue());
+                System.out.println("Bezeichner erkannt: " + left);
+            }
         } else {
             throw new RuntimeException("Erwartet Zahl oder Variable in Zeile " + peek().getLine());
         }
 
-        // Danach können beliebig viele Operatoren (+,-,*,/) folgen, gefolgt von neuer Expression
+        // Operatoren verarbeiten (+,-,*,/)
         while (match(TokenType.PLUS) || match(TokenType.MINUS) || match(TokenType.MULT) || match(TokenType.DIV)) {
             Token operator = tokens.get(position - 1);
+            System.out.println("Operator erkannt: " + operator.getValue());
+
             ASTNode right = parseExpression();
+            System.out.println("Rechter Ausdruck: " + right);
+
             left = new BinaryExpressionNode(left, operator.getValue(), right);
+            System.out.println("Neue Ausdrucksstruktur: " + left);
+        }
+
+        // **Vergleichsoperatoren verarbeiten**
+        if (match(TokenType.GT) || match(TokenType.LT) || match(TokenType.GTE) || match(TokenType.LTE) || match(TokenType.EQ) || match(TokenType.NEQ)) {
+            Token operator = tokens.get(position - 1);
+            System.out.println("Vergleichsoperator erkannt: " + operator.getValue());
+
+            ASTNode right = parseExpression();
+            System.out.println("Rechter Ausdruck der Vergleichsoperation: " + right);
+
+            left = new BinaryExpressionNode(left, operator.getValue(), right);
+            System.out.println("Neue Vergleichsstruktur: " + left);
         }
 
         return left;
     }
+
+
 
     /**
      *  Parse FunctionDefinition:
      *   fun identifier ( [identifier (, identifier)*] ) { ... }
      */
     private ASTNode parseFunctionDefinition() {
-        // Hier verbrauchen wir den FUN-Token nur ein einziges Mal!
+        System.out.println("parseFunctionDefinition(): Position " + position);
+
         consume(TokenType.FUN, "Erwartet 'fun'");
+        System.out.println("Gefunden: 'fun'");
 
         Token functionName = consume(TokenType.IDENTIFIER, "Erwartet Funktionsnamen");
-        consume(TokenType.LPAREN, "Erwartet '('");
+        System.out.println("Funktionsname: " + functionName);
 
-        // Erzeuge Funktionsdefinition-Knoten
+        consume(TokenType.LPAREN, "Erwartet '('");
+        System.out.println("Gefunden: '('");
+
         FunctionDefinitionNode functionNode = new FunctionDefinitionNode(functionName.getValue());
 
         // Parameterliste (optional) parsen
         while (!match(TokenType.RPAREN)) {
             Token param = consume(TokenType.IDENTIFIER, "Erwartet einen Parameter");
             functionNode.addParameter(param.getValue());
-            if (!match(TokenType.COMMA)) break; // Wenn kein Komma da, Parameterliste zu Ende
+            System.out.println("Parameter: " + param);
+
+            if (!match(TokenType.COMMA)) break;
         }
 
-        consume(TokenType.LBRACE, "Erwartet '{'");
+        consume(TokenType.RPAREN, "Erwartet ')'");
+        System.out.println("Gefunden: ')'");
 
-        // Funktionskörper parsen, bis '}'
+        consume(TokenType.LBRACE, "Erwartet '{'");
+        System.out.println("Gefunden: '{'");
+
         while (!match(TokenType.RBRACE)) {
             functionNode.addBodyStatement(parseStatement());
         }
 
+        System.out.println("Funktionsdefinition abgeschlossen.");
         return functionNode;
     }
+
 
     /**
      *  Parse Funktionsaufruf:
      *   identifier( <argumente> ) ;
      */
-    private ASTNode parseFunctionCall() {
-        // Der erste Token MUSS ein Identifier sein
-        Token functionName = consume(TokenType.IDENTIFIER, "Erwartet Funktionsnamen");
-        consume(TokenType.LPAREN, "Erwartet '('");
+    private ASTNode parseFunctionCall(Token functionNameToken) {
+        consume(TokenType.LPAREN, "Erwartet '(' für Funktionsaufruf");
+        System.out.println("Funktionsaufruf: " + functionNameToken.getValue());
 
-        FunctionCallNode functionCallNode = new FunctionCallNode(functionName.getValue());
+        FunctionCallNode functionCallNode = new FunctionCallNode(functionNameToken.getValue());
 
-        // Argumente (optional)
-        if (!match(TokenType.RPAREN)) {
-            // Wenn wir die ')' nicht sofort gefunden haben, gibt es mindestens ein Argument
+        if (!match(TokenType.RPAREN)) { // Falls Argumente existieren
             do {
-                functionCallNode.addArgument(parseExpression());
-            } while (match(TokenType.COMMA)); // mehrere Argumente mit Komma
-            consume(TokenType.RPAREN, "Erwartet ')'");
+                ASTNode argument = parseExpression();
+                functionCallNode.addArgument(argument);
+                System.out.println("Argument erkannt: " + argument);
+            } while (match(TokenType.COMMA));
+
+            consume(TokenType.RPAREN, "Erwartet ')' am Ende des Funktionsaufrufs");
         }
 
-        // Ende mit Semikolon
-        consume(TokenType.SEMI, "Erwartet ';'");
         return functionCallNode;
     }
 
@@ -196,49 +244,71 @@ public class Parser {
      *   if ( condition ) { ... } [ else { ... } ]
      */
     private ASTNode parseIfElse() {
+        System.out.println("parseIfElse(): Position " + position);
+
         consume(TokenType.IF, "Erwartet 'if'");
+        System.out.println("Gefunden: 'if'");
+
         consume(TokenType.LPAREN, "Erwartet '('");
         ASTNode condition = parseExpression();
         consume(TokenType.RPAREN, "Erwartet ')'");
+        System.out.println("Bedingung erkannt: " + condition);
+
         consume(TokenType.LBRACE, "Erwartet '{'");
 
         IfElseNode ifNode = new IfElseNode(condition);
-
-        // IF-Block
         while (!match(TokenType.RBRACE)) {
             ifNode.addIfBody(parseStatement());
         }
+        System.out.println("IF-Block abgeschlossen.");
 
-        // Optionales ELSE
         if (match(TokenType.ELSE)) {
             consume(TokenType.LBRACE, "Erwartet '{'");
             while (!match(TokenType.RBRACE)) {
                 ifNode.addElseBody(parseStatement());
             }
+            System.out.println("ELSE-Block abgeschlossen.");
         }
 
         return ifNode;
     }
+
 
     /**
      *  Parse While:
      *   while ( condition ) { ... }
      */
     private ASTNode parseWhile() {
+        System.out.println("parseWhile(): Position " + position);
+
         consume(TokenType.WHILE, "Erwartet 'while'");
+        System.out.println("Gefunden: 'while'");
+
         consume(TokenType.LPAREN, "Erwartet '('");
         ASTNode condition = parseExpression();
         consume(TokenType.RPAREN, "Erwartet ')'");
+        System.out.println("Bedingung erkannt: " + condition);
+
         consume(TokenType.LBRACE, "Erwartet '{'");
 
         WhileNode whileNode = new WhileNode(condition);
-
-        // Schleifen-Body
         while (!match(TokenType.RBRACE)) {
             whileNode.addBodyStatement(parseStatement());
         }
+        System.out.println("While-Schleife abgeschlossen.");
 
         return whileNode;
+    }
+
+    private ASTNode parseReturn() {
+        System.out.println("parseReturn(): Position " + position);
+
+        consume(TokenType.RETURN, "Erwartet 'return'");
+        ASTNode expression = parseExpression();  // Return-Wert parsen
+        consume(TokenType.SEMI, "Erwartet ';'");
+
+        System.out.println("Return-Statement erkannt mit Ausdruck: " + expression);
+        return new ReturnNode(expression);
     }
 
     // ----------------------------------------------------------------

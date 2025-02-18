@@ -16,7 +16,8 @@ Die Programmiersprache **PAUL** (**P**arsing **A**nd **U**nderstanding **L**angu
               | <FunktionsDefinition>  
               | <FunktionsAufruf> ";"  
               | <Kontrollstruktur>  
-              | <Ausdruck> ";"
+              | <Ausdruck> ";"  
+              | "return" <Ausdruck> ";"
 ```
 ➡ Eine **Anweisung** kann eine **Zuweisung, Funktionsdefinition, Kontrollstruktur oder einen Ausdruck** enthalten.
 
