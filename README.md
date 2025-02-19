@@ -6,7 +6,9 @@ Die Programmiersprache **PAUL** (**P**arsing **A**nd **U**nderstanding **L**angu
 
 ### **🔹 Programmstruktur**
 ```plaintext
-<Programm> ::= <Anweisung> | <Anweisung> <Programm>
+<Programm> ::= <Anweisung> <ProgrammTail>
+
+<ProgrammTail> ::= <Anweisung> <ProgrammTail> | ε
 ```
 ➡ Ein **Programm** besteht aus einer **Liste von Anweisungen**.
 
@@ -23,8 +25,8 @@ Die Programmiersprache **PAUL** (**P**arsing **A**nd **U**nderstanding **L**angu
 
 ### **🔹 Zuweisungen**
 ```plaintext
-<Zuweisung> ::= "var" <Identifikator> "=" <Ausdruck> ";"
-              | <Identifikator> "=" <Ausdruck> ";"
+<Zuweisung> ::= "var" <Identifikator> "=" <Ausdruck>  
+              | <Identifikator> "=" <Ausdruck>
 ```
 ➡ Variablen können **deklariert und zugewiesen** werden.
 
@@ -32,22 +34,28 @@ Die Programmiersprache **PAUL** (**P**arsing **A**nd **U**nderstanding **L**angu
 ```plaintext
 <FunktionsDefinition> ::= "fun" <Identifikator> "(" <ParameterListe> ")" "{" <Programm> "}"
 
-<FunktionsAufruf> ::= <Identifikator> "(" <ArgumentListe> ")" ";"
+<FunktionsAufruf> ::= <Identifikator> "(" <ArgumentListe> ")"
 ```
 ➡ PAUL unterstützt **Funktionen mit Parametern** und **Funktionsaufrufe**.
 
 ### **🔹 Parameter und Argumente**
 ```plaintext
-<ParameterListe> ::= <Identifikator> "," <ParameterListe> | <Identifikator> | <Epsilon>
+<ParameterListe> ::= <Identifikator> <ParameterListeTail>
 
-<ArgumentListe> ::= <Ausdruck> "," <ArgumentListe> | <Ausdruck> | <Epsilon>
+<ParameterListeTail> ::= "," <Identifikator> <ParameterListeTail> | ε
+
+<ArgumentListe> ::= <Ausdruck> <ArgumentListeTail>
+
+<ArgumentListeTail> ::= "," <Ausdruck> <ArgumentListeTail> | ε
 ```
 ➡ Eine **Funktion** kann **beliebig viele Parameter und Argumente** haben.
 
 ### **🔹 Kontrollstrukturen**
 ```plaintext
-<Kontrollstruktur> ::= "if" "(" <Bedingung> ")" "{" <Programm> "}" ["else" "{" <Programm> "}"]  
+<Kontrollstruktur> ::= "if" "(" <Bedingung> ")" "{" <Programm> "}" <ElseBlock>  
                      | "while" "(" <Bedingung> ")" "{" <Programm> "}"
+
+<ElseBlock> ::= "else" "{" <Programm> "}" | ε
 ```
 ➡ **Bedingte Anweisungen (`if-else`) und Schleifen (`while`)** sind erlaubt.
 
@@ -61,21 +69,21 @@ Die Programmiersprache **PAUL** (**P**arsing **A**nd **U**nderstanding **L**angu
 
 ### **🔹 Arithmetische Operationen**
 ```plaintext
-<Ausdruck> ::= <Term> <Rechenoperation>
+<Ausdruck> ::= <Term> <AusdruckTail>
 
-<Rechenoperation> ::= "+" <Term> <Rechenoperation>  
-                     | "-" <Term> <Rechenoperation>  
-                     | <Epsilon>
+<AusdruckTail> ::= "+" <Term> <AusdruckTail>  
+                 | "-" <Term> <AusdruckTail>  
+                 | ε
 ```
 ➡ Ein **Ausdruck** kann eine **Addition oder Subtraktion** enthalten.
 
 ### **🔹 Multiplikation und Division**
 ```plaintext
-<Term> ::= <Faktor> <MultDiv>
+<Term> ::= <Faktor> <TermTail>
 
-<MultDiv> ::= "*" <Faktor> <MultDiv>  
-            | "/" <Faktor> <MultDiv>  
-            | <Epsilon>
+<TermTail> ::= "*" <Faktor> <TermTail>  
+             | "/" <Faktor> <TermTail>  
+             | ε
 ```
 ➡ **Multiplikation und Division** werden hier definiert.
 
