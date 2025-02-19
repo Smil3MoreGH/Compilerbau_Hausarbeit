@@ -28,7 +28,7 @@ public class Main {
         ASTNode ast = parser.parse();
 
         // AST ausgeben
-        System.out.println("\n📌 Parser-Output (AST):");
+        System.out.println("\nParser-Output (AST):");
         System.out.println(ast.toString(0));
     }
 }
