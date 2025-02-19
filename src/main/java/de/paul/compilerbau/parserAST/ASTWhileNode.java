@@ -1,13 +1,13 @@
-package de.paul.compilerbau.parser;
+package de.paul.compilerbau.parserAST;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class WhileNode extends ASTNode {
+public class ASTWhileNode extends ASTNode {
     private final ASTNode condition;
     private final List<ASTNode> bodyStatements = new ArrayList<>();
 
-    public WhileNode(ASTNode condition) {
+    public ASTWhileNode(ASTNode condition) {
         this.condition = condition;
     }
 

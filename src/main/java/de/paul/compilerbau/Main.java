@@ -3,8 +3,8 @@ package de.paul.compilerbau;
 import de.paul.compilerbau.scanner.Scanner;
 import de.paul.compilerbau.scanner.Token;
 import de.paul.compilerbau.utils.FileLoader;
-import de.paul.compilerbau.parser.Parser;
-import de.paul.compilerbau.parser.ASTNode;
+import de.paul.compilerbau.parserAST.ASTParser;
+import de.paul.compilerbau.parserAST.ASTNode;
 
 import java.util.List;
 
@@ -24,8 +24,8 @@ public class Main {
         }
 
         // Parser ausführen
-        Parser parser = new Parser(tokens);
-        ASTNode ast = parser.parse();
+        ASTParser ASTParser = new ASTParser(tokens);
+        ASTNode ast = ASTParser.parse();
 
         // AST ausgeben
         System.out.println("\nParser-Output (AST):");

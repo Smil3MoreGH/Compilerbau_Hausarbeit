@@ -1,14 +1,14 @@
-package de.paul.compilerbau.parser;
+package de.paul.compilerbau.parserAST;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FunctionDefinitionNode extends ASTNode {
+public class ASTFunctionDefinitionNode extends ASTNode {
     private final String functionName;
     private final List<String> parameters = new ArrayList<>();
     private final List<ASTNode> bodyStatements = new ArrayList<>();
 
-    public FunctionDefinitionNode(String functionName) {
+    public ASTFunctionDefinitionNode(String functionName) {
         this.functionName = functionName;
     }
 

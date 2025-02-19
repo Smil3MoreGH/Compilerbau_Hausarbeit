@@ -1,10 +1,10 @@
-package de.paul.compilerbau.parser;
+package de.paul.compilerbau.parserAST;
 
-public class AssignmentNode extends ASTNode {
+public class ASTAssignmentNode extends ASTNode {
     private final String variableName;
     private final ASTNode expression;
 
-    public AssignmentNode(String variableName, ASTNode expression) {
+    public ASTAssignmentNode(String variableName, ASTNode expression) {
         this.variableName = variableName;
         this.expression = expression;
     }

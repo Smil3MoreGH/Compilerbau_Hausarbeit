@@ -1,14 +1,14 @@
-package de.paul.compilerbau.parser;
+package de.paul.compilerbau.parserAST;
 
 import de.paul.compilerbau.scanner.Token;
 import de.paul.compilerbau.scanner.TokenType;
 import java.util.List;
 
-public class Parser {
+public class ASTParser {
     private final List<Token> tokens;
     private int position = 0; // Aktuelle Position in der Token-Liste
 
-    public Parser(List<Token> tokens) {
+    public ASTParser(List<Token> tokens) {
         this.tokens = tokens;
     }
 
@@ -18,7 +18,7 @@ public class Parser {
     }
 
     private ASTNode parseProgram() {
-        ProgramNode root = new ProgramNode();
+        ASTProgramNode root = new ASTProgramNode();
         System.out.println("Beginne Programmanalyse");
 
         // Solange wir nicht am Ende (EOF) sind, hole Statements
@@ -58,7 +58,7 @@ public class Parser {
         consume(TokenType.ASSIGN, "Erwartet '='");
         ASTNode expression = parseExpression();
         consume(TokenType.SEMI, "Erwartet ';'");
-        return new AssignmentNode(identifier.getValue(), expression);
+        return new ASTAssignmentNode(identifier.getValue(), expression);
     }
 
     private ASTNode parseExpression() {
@@ -70,7 +70,7 @@ public class Parser {
         if (match(TokenType.PLUS) || match(TokenType.MINUS)) {
             Token operator = tokens.get(position - 1);
             ASTNode right = parseTerm();
-            ASTNode newNode = new BinaryExpressionNode(left, operator.getValue(), right);
+            ASTNode newNode = new ASTBinaryExpressionNode(left, operator.getValue(), right);
             return parseExpressionTail(newNode);
         }
         return left;
@@ -85,7 +85,7 @@ public class Parser {
         if (match(TokenType.MULT) || match(TokenType.DIV)) {
             Token operator = tokens.get(position - 1);
             ASTNode right = parseFactor();
-            ASTNode newNode = new BinaryExpressionNode(left, operator.getValue(), right);
+            ASTNode newNode = new ASTBinaryExpressionNode(left, operator.getValue(), right);
             return parseTermTail(newNode);
         }
         return left;
@@ -93,13 +93,13 @@ public class Parser {
 
     private ASTNode parseFactor() {
         if (match(TokenType.NUMBER)) {
-            return new ExpressionNode(tokens.get(position - 1).getValue());
+            return new ASTExpressionNode(tokens.get(position - 1).getValue());
         } else if (match(TokenType.IDENTIFIER)) {
             Token identifier = tokens.get(position - 1);
             if (lookAhead(TokenType.LPAREN)) {
                 return parseFunctionCall(identifier);
             }
-            return new ExpressionNode(identifier.getValue());
+            return new ASTExpressionNode(identifier.getValue());
         } else if (match(TokenType.LPAREN)) {
             ASTNode expression = parseExpression();
             consume(TokenType.RPAREN, "Erwartet ')' ");
@@ -114,7 +114,7 @@ public class Parser {
         if (match(TokenType.GT) || match(TokenType.LT) || match(TokenType.GTE) || match(TokenType.LTE) || match(TokenType.EQ) || match(TokenType.NEQ)) {
             Token operator = tokens.get(position - 1);
             ASTNode right = parseExpression();
-            return new BinaryExpressionNode(left, operator.getValue(), right);
+            return new ASTBinaryExpressionNode(left, operator.getValue(), right);
         }
         return left;
     }
@@ -124,7 +124,7 @@ public class Parser {
         Token functionName = consume(TokenType.IDENTIFIER, "Funktionsname erwartet");
         consume(TokenType.LPAREN, "Erwartet '(' ");
 
-        FunctionDefinitionNode functionNode = new FunctionDefinitionNode(functionName.getValue());
+        ASTFunctionDefinitionNode functionNode = new ASTFunctionDefinitionNode(functionName.getValue());
         parseParameterList(functionNode);
 
         consume(TokenType.RPAREN, "Erwartet ')' ");
@@ -136,14 +136,14 @@ public class Parser {
         return functionNode;
     }
 
-    private void parseParameterList(FunctionDefinitionNode functionNode) {
+    private void parseParameterList(ASTFunctionDefinitionNode functionNode) {
         if (lookAhead(TokenType.IDENTIFIER)) {
             functionNode.addParameter(consume(TokenType.IDENTIFIER, "Parameter erwartet").getValue());
             parseParameterListTail(functionNode);
         }
     }
 
-    private void parseParameterListTail(FunctionDefinitionNode functionNode) {
+    private void parseParameterListTail(ASTFunctionDefinitionNode functionNode) {
         if (match(TokenType.COMMA)) {
             functionNode.addParameter(consume(TokenType.IDENTIFIER, "Parameter erwartet").getValue());
             parseParameterListTail(functionNode);
@@ -152,20 +152,20 @@ public class Parser {
 
     private ASTNode parseFunctionCall(Token functionNameToken) {
         consume(TokenType.LPAREN, "Erwartet '(' für Funktionsaufruf");
-        FunctionCallNode callNode = new FunctionCallNode(functionNameToken.getValue());
+        ASTFunctionCallNode callNode = new ASTFunctionCallNode(functionNameToken.getValue());
         parseArgumentList(callNode);
         consume(TokenType.RPAREN, "Erwartet ')' ");
         return callNode;
     }
 
-    private void parseArgumentList(FunctionCallNode callNode) {
+    private void parseArgumentList(ASTFunctionCallNode callNode) {
         if (!lookAhead(TokenType.RPAREN)) {
             callNode.addArgument(parseExpression());
             parseArgumentListTail(callNode);
         }
     }
 
-    private void parseArgumentListTail(FunctionCallNode callNode) {
+    private void parseArgumentListTail(ASTFunctionCallNode callNode) {
         if (match(TokenType.COMMA)) {
             callNode.addArgument(parseExpression());
             parseArgumentListTail(callNode);
@@ -178,7 +178,7 @@ public class Parser {
         ASTNode condition = parseComparison();
         consume(TokenType.RPAREN, "Erwartet ')' ");
 
-        IfElseNode ifNode = new IfElseNode(condition);
+        ASTIfElseNode ifNode = new ASTIfElseNode(condition);
         consume(TokenType.LBRACE, "Erwartet '{'");
         while (!match(TokenType.RBRACE)) {
             ifNode.addIfBody(parseStatement());
@@ -199,19 +199,19 @@ public class Parser {
         ASTNode condition = parseComparison();
         consume(TokenType.RPAREN, "Erwartet ')' ");
 
-        WhileNode whileNode = new WhileNode(condition);
+        ASTWhileNode ASTWhileNode = new ASTWhileNode(condition);
         consume(TokenType.LBRACE, "Erwartet '{'");
         while (!match(TokenType.RBRACE)) {
-            whileNode.addBodyStatement(parseStatement());
+            ASTWhileNode.addBodyStatement(parseStatement());
         }
-        return whileNode;
+        return ASTWhileNode;
     }
 
     private ASTNode parseReturn() {
         consume(TokenType.RETURN, "Erwartet 'return'");
         ASTNode expression = parseExpression();
         consume(TokenType.SEMI, "Erwartet ';'");
-        return new ReturnNode(expression);
+        return new ASTReturnNode(expression);
     }
 
     private boolean match(TokenType type) {

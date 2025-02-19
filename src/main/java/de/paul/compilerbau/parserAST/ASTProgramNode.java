@@ -1,9 +1,9 @@
-package de.paul.compilerbau.parser;
+package de.paul.compilerbau.parserAST;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProgramNode extends ASTNode {
+public class ASTProgramNode extends ASTNode {
     private final List<ASTNode> statements = new ArrayList<>();
 
     public void addChild(ASTNode node) {

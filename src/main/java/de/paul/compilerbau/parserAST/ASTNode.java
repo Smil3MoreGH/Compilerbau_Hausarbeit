@@ -1,4 +1,4 @@
-package de.paul.compilerbau.parser;
+package de.paul.compilerbau.parserAST;
 
 import java.util.ArrayList;
 import java.util.List;

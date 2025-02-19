@@ -1,11 +1,11 @@
-package de.paul.compilerbau.parser;
+package de.paul.compilerbau.parserAST;
 
-public class BinaryExpressionNode extends ASTNode {
+public class ASTBinaryExpressionNode extends ASTNode {
     private final ASTNode left;
     private final String operator;
     private final ASTNode right;
 
-    public BinaryExpressionNode(ASTNode left, String operator, ASTNode right) {
+    public ASTBinaryExpressionNode(ASTNode left, String operator, ASTNode right) {
         this.left = left;
         this.operator = operator;
         this.right = right;

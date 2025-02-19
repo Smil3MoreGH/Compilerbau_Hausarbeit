@@ -1,14 +1,14 @@
-package de.paul.compilerbau.parser;
+package de.paul.compilerbau.parserAST;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class IfElseNode extends ASTNode {
+public class ASTIfElseNode extends ASTNode {
     private final ASTNode condition;
     private final List<ASTNode> ifBody = new ArrayList<>();
     private final List<ASTNode> elseBody = new ArrayList<>();
 
-    public IfElseNode(ASTNode condition) {
+    public ASTIfElseNode(ASTNode condition) {
         this.condition = condition;
     }
 

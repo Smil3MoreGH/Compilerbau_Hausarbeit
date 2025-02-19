@@ -1,9 +1,9 @@
-package de.paul.compilerbau.parser;
+package de.paul.compilerbau.parserAST;
 
-public class ExpressionNode extends ASTNode {
+public class ASTExpressionNode extends ASTNode {
     private final String value;
 
-    public ExpressionNode(String value) {
+    public ASTExpressionNode(String value) {
         this.value = value;
     }
 

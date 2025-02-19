@@ -1,9 +1,9 @@
-package de.paul.compilerbau.parser;
+package de.paul.compilerbau.parserAST;
 
-public class ReturnNode extends ASTNode {
+public class ASTReturnNode extends ASTNode {
     private final ASTNode returnValue;
 
-    public ReturnNode(ASTNode returnValue) {
+    public ASTReturnNode(ASTNode returnValue) {
         this.returnValue = returnValue;
     }
 
