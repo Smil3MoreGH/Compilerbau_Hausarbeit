@@ -15,6 +15,14 @@ public class ASTWhileNode extends ASTNode {
         bodyStatements.add(stmt);
     }
 
+    public ASTNode getCondition() {
+        return condition;
+    }
+
+    public List<ASTNode> getBodyStatements() {
+        return bodyStatements;
+    }
+
     @Override
     public String toString(int indent) {
         StringBuilder sb = new StringBuilder(getIndent(indent) + "WhileLoop:\n" + condition.toString(indent + 1));
@@ -24,3 +32,4 @@ public class ASTWhileNode extends ASTNode {
         return sb.toString();
     }
 }
+

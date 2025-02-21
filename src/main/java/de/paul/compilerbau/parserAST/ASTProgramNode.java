@@ -6,8 +6,13 @@ import java.util.List;
 public class ASTProgramNode extends ASTNode {
     private final List<ASTNode> statements = new ArrayList<>();
 
+    @Override
     public void addChild(ASTNode node) {
         statements.add(node);
+    }
+
+    public List<ASTNode> getStatements() {
+        return statements;
     }
 
     @Override

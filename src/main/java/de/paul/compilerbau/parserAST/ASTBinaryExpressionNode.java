@@ -11,6 +11,18 @@ public class ASTBinaryExpressionNode extends ASTNode {
         this.right = right;
     }
 
+    public ASTNode getLeft() {
+        return left;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public ASTNode getRight() {
+        return right;
+    }
+
     @Override
     public String toString(int indent) {
         return getIndent(indent) + "BinaryExpression (" + operator + "):\n" +

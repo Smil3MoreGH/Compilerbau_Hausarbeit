@@ -7,6 +7,10 @@ public class ASTExpressionNode extends ASTNode {
         this.value = value;
     }
 
+    public String getValue() {
+        return value;
+    }
+
     @Override
     public String toString(int indent) {
         return getIndent(indent) + "Expression: " + value + "\n";

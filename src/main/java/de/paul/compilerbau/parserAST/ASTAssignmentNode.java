@@ -9,6 +9,14 @@ public class ASTAssignmentNode extends ASTNode {
         this.expression = expression;
     }
 
+    public String getVariableName() {
+        return variableName;
+    }
+
+    public ASTNode getExpression() {
+        return expression;
+    }
+
     @Override
     public String toString(int indent) {
         return getIndent(indent) + "Assignment: " + variableName + " =\n" + expression.toString(indent + 1);

@@ -15,6 +15,14 @@ public class ASTFunctionCallNode extends ASTNode {
         arguments.add(arg);
     }
 
+    public String getFunctionName() {
+        return functionName;
+    }
+
+    public List<ASTNode> getArguments() {
+        return arguments;
+    }
+
     @Override
     public String toString(int indent) {
         StringBuilder sb = new StringBuilder(getIndent(indent) + "FunctionCall: " + functionName + "\n");

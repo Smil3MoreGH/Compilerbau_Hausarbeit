@@ -20,6 +20,18 @@ public class ASTFunctionDefinitionNode extends ASTNode {
         bodyStatements.add(stmt);
     }
 
+    public String getFunctionName() {
+        return functionName;
+    }
+
+    public List<String> getParameters() {
+        return parameters;
+    }
+
+    public List<ASTNode> getBodyStatements() {
+        return bodyStatements;
+    }
+
     @Override
     public String toString(int indent) {
         StringBuilder sb = new StringBuilder(getIndent(indent) + "Function: " + functionName + "(" + String.join(", ", parameters) + ")\n");

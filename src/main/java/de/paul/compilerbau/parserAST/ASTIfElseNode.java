@@ -20,6 +20,18 @@ public class ASTIfElseNode extends ASTNode {
         elseBody.add(stmt);
     }
 
+    public ASTNode getCondition() {
+        return condition;
+    }
+
+    public List<ASTNode> getIfBody() {
+        return ifBody;
+    }
+
+    public List<ASTNode> getElseBody() {
+        return elseBody;
+    }
+
     @Override
     public String toString(int indent) {
         StringBuilder sb = new StringBuilder(getIndent(indent) + "IfCondition:\n" + condition.toString(indent + 1));
