@@ -12,33 +12,27 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        // 1. Lade den PAUL-Code aus der Datei
+        // Code laden
         String sourceCode = FileLoader.loadFile("test.paul");
 
-        // 2. Scanner erstellen und Code analysieren
+        // Scanner & Tokens
         Scanner scanner = new Scanner(sourceCode);
         List<Token> tokens = scanner.scan();
 
-        // Scanner-Output ausgeben
-        System.out.println("Scanner-Output:");
-        for (Token token : tokens) {
-            System.out.println(token);
-        }
+        // Parser → AST
+        ASTParser parser = new ASTParser(tokens);
+        ASTNode ast = parser.parse();
 
-        // 3. Parser ausführen
-        ASTParser astParser = new ASTParser(tokens);
-        ASTNode ast = astParser.parse();
-
-        // AST ausgeben
+        // AST anzeigen
         System.out.println("\nParser-Output (AST):");
         System.out.println(ast.toString(0));
 
-        // 4. Codegenerator ausführen
-        //CodeGenerator codeGenerator = new CodeGenerator();
-        //InstructionList instructions = codeGenerator.generate(ast);
+        // Code generieren
+        CodeGenerator codeGenerator = new CodeGenerator();
+        InstructionList instructions = codeGenerator.generate(ast);
 
-        // Zwischencode ausgeben
-        //System.out.println("\nCodegenerator-Output (Zwischencode):");
-        //System.out.println(instructions);
+        // Zwischencode anzeigen
+        System.out.println("\nCodegenerator-Output (Zwischencode):");
+        System.out.println(instructions);
     }
 }

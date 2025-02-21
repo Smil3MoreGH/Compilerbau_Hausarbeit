@@ -17,21 +17,21 @@ public class CodeGenerator {
 
     // Hauptmethode: Startet die Codegenerierung
     public InstructionList generate(ASTNode ast) {
-        visit(ast);  // Traversiert den AST
+        visit(ast);  // AST traversieren
         return instructions;
     }
 
-    // Dispatcher: Ermittelt den AST-Knotentyp
+    // Dispatcher: Ermittelt den Typ des AST-Knotens
     private void visit(ASTNode node) {
         if (node instanceof ASTProgramNode) visitProgram((ASTProgramNode) node);
         else if (node instanceof ASTAssignmentNode) visitAssignment((ASTAssignmentNode) node);
         else if (node instanceof ASTBinaryExpressionNode) visitBinaryExpression((ASTBinaryExpressionNode) node);
+        else if (node instanceof ASTExpressionNode) visitExpression((ASTExpressionNode) node);
         else if (node instanceof ASTFunctionDefinitionNode) visitFunctionDefinition((ASTFunctionDefinitionNode) node);
         else if (node instanceof ASTFunctionCallNode) visitFunctionCall((ASTFunctionCallNode) node);
         else if (node instanceof ASTIfElseNode) visitIfElse((ASTIfElseNode) node);
         else if (node instanceof ASTWhileNode) visitWhile((ASTWhileNode) node);
         else if (node instanceof ASTReturnNode) visitReturn((ASTReturnNode) node);
-        else if (node instanceof ASTExpressionNode) visitExpression((ASTExpressionNode) node); // Generischer Ausdruck
     }
 
     // --- Program Node ---
@@ -43,17 +43,29 @@ public class CodeGenerator {
 
     // --- Assignment Node ---
     private void visitAssignment(ASTAssignmentNode node) {
-        visit(node.getExpression());               // Berechne den Wert (PUSH ...)
-        symbolTable.addVariable(node.getVariableName()); // Variable registrieren
+        visit(node.getExpression());                      // Berechne den Wert (PUSH ...)
+        symbolTable.addVariable(node.getVariableName());  // Variable registrieren, falls nicht vorhanden
         instructions.add("STORE", node.getVariableName()); // Wert speichern
+    }
+
+    // --- Expression Node (Zahlen & Variablen) ---
+    private void visitExpression(ASTExpressionNode node) {
+        String value = node.getValue();
+
+        // Prüfen, ob es eine Zahl oder Variable ist
+        if (value.matches("-?\\d+")) {  // Zahl
+            instructions.add("PUSH", value);
+        } else {                        // Variable
+            instructions.add("LOAD", value);
+        }
     }
 
     // --- Binary Expression Node ---
     private void visitBinaryExpression(ASTBinaryExpressionNode node) {
-        visit(node.getLeft());   // Linken Operand berechnen (PUSH ...)
-        visit(node.getRight());  // Rechten Operand berechnen (PUSH ...)
+        visit(node.getLeft());   // Linken Operanden berechnen
+        visit(node.getRight());  // Rechten Operanden berechnen
 
-        // Operatoren-Handling
+        // Operatoren-Mapping
         switch (node.getOperator()) {
             case "+" -> instructions.add("ADD");
             case "-" -> instructions.add("SUB");
@@ -65,6 +77,7 @@ public class CodeGenerator {
             case "!=" -> instructions.add("NEQ");
             case ">=" -> instructions.add("GTE");
             case "<=" -> instructions.add("LTE");
+            default -> throw new IllegalArgumentException("Unbekannter Operator: " + node.getOperator());
         }
     }
 
@@ -73,19 +86,23 @@ public class CodeGenerator {
         String funcLabel = "FUNC_" + node.getFunctionName();
         instructions.add(funcLabel + ":");
 
-        // Parameter in Symboltabelle eintragen
+        // Parameter registrieren
         for (String param : node.getParameters()) {
             symbolTable.addVariable(param);
         }
 
-        visit(node.getBody()); // Funktionskörper generieren
-        instructions.add("RET"); // Rückkehr am Ende der Funktion
+        // Funktionskörper generieren
+        for (ASTNode stmt : node.getBodyStatements()) {
+            visit(stmt);
+        }
+
+        instructions.add("RET"); // Rückkehr nach Funktionsausführung
     }
 
     // --- Function Call Node ---
     private void visitFunctionCall(ASTFunctionCallNode node) {
-        for (ASTExpressionNode arg : node.getArguments()) {
-            visit(arg); // Argumente auf den Stack legen
+        for (ASTNode arg : node.getArguments()) {
+            visit(arg);  // Argumente auf den Stack legen
         }
         instructions.add("CALL", node.getFunctionName()); // Funktionsaufruf
     }
@@ -96,14 +113,18 @@ public class CodeGenerator {
         String endLabel = labelGenerator.generateLabel("ENDIF");
 
         visit(node.getCondition());         // Bedingung evaluieren
-        instructions.add("JZ", elseLabel);  // Falls false → springe zum Else-Block
+        instructions.add("JZ", elseLabel);  // Falls Bedingung false → Springe zu ELSE
 
-        visit(node.getThenBlock());         // Then-Block generieren
-        instructions.add("JMP", endLabel);  // Überspringe Else nach Then
+        // THEN-Block
+        for (ASTNode stmt : node.getIfBody()) {
+            visit(stmt);
+        }
+        instructions.add("JMP", endLabel);  // Nach THEN-Block zum Ende springen
 
-        instructions.add(elseLabel + ":");  // Else-Label
-        if (node.getElseBlock() != null) {
-            visit(node.getElseBlock());     // Else-Block generieren
+        // ELSE-Block
+        instructions.add(elseLabel + ":");
+        for (ASTNode stmt : node.getElseBody()) {
+            visit(stmt);
         }
 
         instructions.add(endLabel + ":");   // Ende der If-Else-Struktur
@@ -118,28 +139,18 @@ public class CodeGenerator {
         visit(node.getCondition());         // Bedingung evaluieren
         instructions.add("JZ", endLabel);   // Falls false → Schleifenende
 
-        visit(node.getBody());              // Schleifenrumpf generieren
-        instructions.add("JMP", startLabel);// Wieder an den Anfang springen
+        // Schleifenrumpf
+        for (ASTNode stmt : node.getBodyStatements()) {
+            visit(stmt);
+        }
 
-        instructions.add(endLabel + ":");   // Schleifenende
+        instructions.add("JMP", startLabel); // Zurück zum Anfang
+        instructions.add(endLabel + ":");    // Schleifenende
     }
 
     // --- Return Node ---
     private void visitReturn(ASTReturnNode node) {
-        visit(node.getExpression());  // Wert berechnen
-        instructions.add("RET");      // Rücksprung zur aufrufenden Funktion
-    }
-
-    // --- Generischer Ausdruck (Zahlen, Variablen, Funktionsaufrufe) ---
-    private void visitExpression(ASTExpressionNode node) {
-        if (node instanceof ASTBinaryExpressionNode) {
-            visitBinaryExpression((ASTBinaryExpressionNode) node);
-        } else if (node instanceof ASTFunctionCallNode) {
-            visitFunctionCall((ASTFunctionCallNode) node);
-        } else if (node instanceof ASTVariableNode variableNode) {
-            instructions.add("LOAD", variableNode.getVariableName());
-        } else if (node instanceof ASTNumberNode numberNode) {
-            instructions.add("PUSH", String.valueOf(numberNode.getValue()));
-        }
+        visit(node.getReturnValue());  // Wert berechnen
+        instructions.add("RET");       // Rücksprung
     }
 }
