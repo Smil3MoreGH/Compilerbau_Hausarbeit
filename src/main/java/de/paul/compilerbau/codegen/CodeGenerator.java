@@ -86,17 +86,24 @@ public class CodeGenerator {
         String funcLabel = "FUNC_" + node.getFunctionName();
         instructions.add(funcLabel + ":");
 
-        // Parameter registrieren
-        for (String param : node.getParameters()) {
-            symbolTable.addVariable(param);
+        // Parameter speichern
+        List<String> params = node.getParameters();
+        for (int i = params.size() - 1; i >= 0; i--) {
+            instructions.add("STORE", params.get(i));
         }
+
+        boolean hasReturn = false;
 
         // Funktionskörper generieren
         for (ASTNode stmt : node.getBodyStatements()) {
             visit(stmt);
+            if (stmt instanceof ASTReturnNode) hasReturn = true;
         }
 
-        instructions.add("RET"); // Rückkehr nach Funktionsausführung
+        // ✅ Nur RET hinzufügen, wenn es kein explizites return gab
+        if (!hasReturn) {
+            instructions.add("RET");
+        }
     }
 
     // --- Function Call Node ---

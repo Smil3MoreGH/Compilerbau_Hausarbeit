@@ -18,45 +18,47 @@ public class VirtualMachine {
         this.instructions = instructions;
     }
 
-    // 🚀 Startet die VM
+    // Startet die VM
     public void run() {
+        System.out.println("Starte Ausführung der VM");
         while (instructionPointer < instructions.getInstructions().size()) {
             Instruction instruction = instructions.getInstructions().get(instructionPointer);
+            System.out.println("Ausführung von Instruktion bei Position " + instructionPointer + ": " + instruction.getOpcode() + " " + instruction.getOperand());
             execute(instruction);
             instructionPointer++; // Nächste Instruktion
+            System.out.println("Aktueller Stack: " + stack);
+            System.out.println("Aktueller Speicher: " + memory);
+            System.out.println("Aktueller Call-Stack: " + callStack);
+            System.out.println("----------------------------------------");
         }
     }
 
-    // 🔥 Führt eine einzelne Instruktion aus
     private void execute(Instruction instruction) {
         String opcode = instruction.getOpcode();
         String operand = instruction.getOperand();
 
+        // Labels ignorieren (z.B. FUNC_add:, ELSE_0:)
+        if (opcode.endsWith(":")) {
+            return; // Labels sind keine ausführbaren Instruktionen
+        }
+
         switch (opcode) {
             case InstructionSet.PUSH -> stack.push(Integer.parseInt(operand));
-
             case InstructionSet.LOAD -> {
                 if (!memory.containsKey(operand)) {
                     throw new RuntimeException("Variable '" + operand + "' ist nicht definiert!");
                 }
                 stack.push(memory.get(operand));
             }
-
-            case InstructionSet.STORE -> {
-                if (stack.isEmpty()) {
-                    throw new RuntimeException("STORE-Fehler: Stack ist leer!");
-                }
-                memory.put(operand, stack.pop());
-            }
-
+            case InstructionSet.STORE -> memory.put(operand, stack.pop());
             case InstructionSet.ADD -> stack.push(stack.pop() + stack.pop());
             case InstructionSet.SUB -> stack.push(-stack.pop() + stack.pop());
             case InstructionSet.MUL -> stack.push(stack.pop() * stack.pop());
             case InstructionSet.DIV -> {
-                int b = stack.pop();
-                int a = stack.pop();
-                if (b == 0) throw new RuntimeException("Division durch Null!");
-                stack.push(a / b);
+                int divisor = stack.pop();
+                int dividend = stack.pop();
+                if (divisor == 0) throw new RuntimeException("Division durch Null!");
+                stack.push(dividend / divisor);
             }
 
             case InstructionSet.GT -> stack.push(stack.pop() < stack.pop() ? 1 : 0);
@@ -70,15 +72,13 @@ public class VirtualMachine {
             case InstructionSet.JZ -> {
                 if (stack.pop() == 0) instructionPointer = findLabel(operand);
             }
-
             case InstructionSet.CALL -> {
-                callStack.push(new ExecutionContext(instructionPointer));
-                instructionPointer = findLabel(operand);
+                callStack.push(new ExecutionContext(instructionPointer)); // Rücksprungadresse speichern
+                instructionPointer = findLabel(operand); // Springe zu Funktionslabel
             }
-
             case InstructionSet.RET -> {
                 if (callStack.isEmpty()) {
-                    throw new RuntimeException("RET-Fehler: Kein Kontext für Rückkehr!");
+                    throw new RuntimeException("RET-Fehler: Kein Rücksprung möglich!");
                 }
                 instructionPointer = callStack.pop().getReturnAddress();
             }
@@ -87,7 +87,7 @@ public class VirtualMachine {
         }
     }
 
-    // 🏷️ Sucht eine Label-Position
+    // Sucht eine Label-Position
     private int findLabel(String label) {
         for (int i = 0; i < instructions.getInstructions().size(); i++) {
             if (instructions.getInstructions().get(i).getOpcode().equals(label + ":")) {
