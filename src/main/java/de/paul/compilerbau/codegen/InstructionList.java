@@ -18,6 +18,18 @@ public class InstructionList {
         instructions.add(new Instruction(opcode, operand));
     }
 
+    public void addAll(InstructionList other) {
+        this.instructions.addAll(other.instructions);
+    }
+
+    public Instruction get(int index) {
+        return instructions.get(index);
+    }
+
+    public int size() {
+        return instructions.size();
+    }
+
     public List<Instruction> getInstructions() {
         return instructions;
     }
