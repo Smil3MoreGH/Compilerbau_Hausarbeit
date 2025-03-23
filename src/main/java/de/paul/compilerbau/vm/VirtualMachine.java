@@ -20,80 +20,144 @@ public class VirtualMachine {
 
     // Startet die VM
     public void run() {
-        System.out.println("Starte Ausführung der VM");
-        while (instructionPointer < instructions.getInstructions().size()) {
-            Instruction instruction = instructions.getInstructions().get(instructionPointer);
-            System.out.println("Ausführung von Instruktion bei Position " + instructionPointer + ": " + instruction.getOpcode() + " " + instruction.getOperand());
-            execute(instruction);
-            instructionPointer++; // Nächste Instruktion
-            System.out.println("Aktueller Stack: " + stack);
-            System.out.println("Aktueller Speicher: " + memory);
-            System.out.println("Aktueller Call-Stack: " + callStack);
-            System.out.println("----------------------------------------");
-        }
-    }
+        System.out.println("=== Starte Ausführung der Virtuellen Maschine ===\n");
 
-    private void execute(Instruction instruction) {
-        String opcode = instruction.getOpcode();
-        String operand = instruction.getOperand();
-
-        // Labels ignorieren (z.B. FUNC_add:, ELSE_0:)
-        if (opcode.endsWith(":")) {
-            return; // Labels sind keine ausführbaren Instruktionen
-        }
-
-        switch (opcode) {
-            case InstructionSet.PUSH -> stack.push(Integer.parseInt(operand));
-            case InstructionSet.LOAD -> {
-                if (!memory.containsKey(operand)) {
-                    throw new RuntimeException("Variable '" + operand + "' ist nicht definiert!");
-                }
-                stack.push(memory.get(operand));
-            }
-            case InstructionSet.STORE -> memory.put(operand, stack.pop());
-            case InstructionSet.ADD -> stack.push(stack.pop() + stack.pop());
-            case InstructionSet.SUB -> stack.push(-stack.pop() + stack.pop());
-            case InstructionSet.MUL -> stack.push(stack.pop() * stack.pop());
-            case InstructionSet.DIV -> {
-                int divisor = stack.pop();
-                int dividend = stack.pop();
-                if (divisor == 0) throw new RuntimeException("Division durch Null!");
-                stack.push(dividend / divisor);
-            }
-
-            case InstructionSet.GT -> stack.push(stack.pop() < stack.pop() ? 1 : 0);
-            case InstructionSet.LT -> stack.push(stack.pop() > stack.pop() ? 1 : 0);
-            case InstructionSet.EQ -> stack.push(stack.pop().equals(stack.pop()) ? 1 : 0);
-            case InstructionSet.NEQ -> stack.push(!stack.pop().equals(stack.pop()) ? 1 : 0);
-            case InstructionSet.GTE -> stack.push(stack.pop() <= stack.pop() ? 1 : 0);
-            case InstructionSet.LTE -> stack.push(stack.pop() >= stack.pop() ? 1 : 0);
-
-            case InstructionSet.JMP -> instructionPointer = findLabel(operand);
-            case InstructionSet.JZ -> {
-                if (stack.pop() == 0) instructionPointer = findLabel(operand);
-            }
-            case InstructionSet.CALL -> {
-                callStack.push(new ExecutionContext(instructionPointer)); // Rücksprungadresse speichern
-                instructionPointer = findLabel(operand); // Springe zu Funktionslabel
-            }
-            case InstructionSet.RET -> {
-                if (callStack.isEmpty()) {
-                    throw new RuntimeException("RET-Fehler: Kein Rücksprung möglich!");
-                }
-                instructionPointer = callStack.pop().getReturnAddress();
-            }
-
-            default -> throw new RuntimeException("Unbekannte Instruktion: " + opcode);
-        }
-    }
-
-    // Sucht eine Label-Position
-    private int findLabel(String label) {
-        for (int i = 0; i < instructions.getInstructions().size(); i++) {
-            if (instructions.getInstructions().get(i).getOpcode().equals(label + ":")) {
-                return i;
+        // 1. Label-Tabelle vorbereiten (für Sprünge)
+        Map<String, Integer> labelMap = new HashMap<>();
+        for (int i = 0; i < instructions.size(); i++) {
+            Instruction instr = instructions.get(i);
+            if (instr.getOpcode().endsWith(":")) {
+                String label = instr.getOpcode().substring(0, instr.getOpcode().length() - 1); // ":" abschneiden
+                labelMap.put(label, i);
             }
         }
-        throw new RuntimeException("Label '" + label + "' nicht gefunden!");
+
+        // 2. Start Haupt-Loop
+        while (instructionPointer < instructions.size()) {
+            Instruction instr = instructions.get(instructionPointer);
+            instructionPointer++; // Normaler Fortschritt, wird ggf. durch Sprünge überschrieben
+
+            String opcode = instr.getOpcode();
+            String arg = instr.getOperand();
+
+            // 🟡 Debug: Aktuelle Instruktion
+            System.out.println("→ Instruktion #" + (instructionPointer - 1) + ": " + instr);
+
+            switch (opcode) {
+                case InstructionSet.PUSH:
+                    stack.push(Integer.parseInt(arg));
+                    break;
+
+                case InstructionSet.GOTO:
+                    instructionPointer = labelMap.get(arg);
+                    System.out.println("   [GOTO] → springe zu Label " + arg);
+                    break;
+
+                case InstructionSet.LOAD:
+                    if (!memory.containsKey(arg)) {
+                        throw new RuntimeException("Variable nicht definiert: " + arg);
+                    }
+                    stack.push(memory.get(arg));
+                    break;
+
+                case InstructionSet.STORE:
+                    int value = stack.pop();
+                    memory.put(arg, value);
+                    // 🔵 Debug: Speichervorgang
+                    System.out.println("   [STORE] " + arg + " = " + value);
+                    break;
+
+                case InstructionSet.ADD:
+                    stack.push(stack.pop() + stack.pop());
+                    break;
+
+                case InstructionSet.SUB:
+                    int b = stack.pop();
+                    int a = stack.pop();
+                    stack.push(a - b);
+                    break;
+
+                case InstructionSet.MUL:
+                    stack.push(stack.pop() * stack.pop());
+                    break;
+
+                case InstructionSet.DIV:
+                    int divisor = stack.pop();
+                    int dividend = stack.pop();
+                    if (divisor == 0) throw new ArithmeticException("Division durch 0!");
+                    stack.push(dividend / divisor);
+                    break;
+
+                case InstructionSet.GT:
+                    stack.push(stack.pop() < stack.pop() ? 1 : 0);
+                    break;
+
+                case InstructionSet.LT:
+                    stack.push(stack.pop() > stack.pop() ? 1 : 0);
+                    break;
+
+                case InstructionSet.EQ:
+                    stack.push(stack.pop().equals(stack.pop()) ? 1 : 0);
+                    break;
+
+                case InstructionSet.NEQ:
+                    stack.push(!stack.pop().equals(stack.pop()) ? 1 : 0);
+                    break;
+
+                case InstructionSet.GTE:
+                    int rhsGTE = stack.pop();
+                    int lhsGTE = stack.pop();
+                    stack.push(lhsGTE >= rhsGTE ? 1 : 0);
+                    break;
+
+                case InstructionSet.LTE:
+                    int rhsLTE = stack.pop();
+                    int lhsLTE = stack.pop();
+                    stack.push(lhsLTE <= rhsLTE ? 1 : 0);
+                    break;
+
+                case InstructionSet.JMP:
+                    instructionPointer = labelMap.get(arg);
+                    System.out.println("   [JMP] → springe zu Label " + arg);
+                    break;
+
+                case InstructionSet.JZ:
+                    int condition = stack.pop();
+                    if (condition == 0) {
+                        instructionPointer = labelMap.get(arg);
+                        System.out.println("   [JZ] Bedingung ist 0 → springe zu " + arg);
+                    } else {
+                        System.out.println("   [JZ] Bedingung ist NICHT 0 → kein Sprung");
+                    }
+                    break;
+
+                case InstructionSet.CALL:
+                    callStack.push(new ExecutionContext(instructionPointer));
+                    instructionPointer = labelMap.get("FUNC_" + arg);
+                    System.out.println("   [CALL] → Funktionssprung zu FUNC_" + arg + ":");
+                    break;
+
+                case InstructionSet.RET:
+                    ExecutionContext context = callStack.pop();
+                    instructionPointer = context.getReturnAddress();
+                    System.out.println("   [RET] → Rücksprung zu #" + instructionPointer);
+                    break;
+
+                default:
+                    if (!opcode.endsWith(":")) {
+                        throw new RuntimeException("Unbekannter Befehl: " + opcode);
+                    }
+                    // Labels werden nicht ausgeführt, daher keine Aktion
+                    break;
+            }
+
+            // 🟢 Debug: Stack nach jedem Schritt
+            System.out.println("   [STACK] " + stack + "\n");
+        }
+
+        // 🏁 Endausgabe
+        System.out.println("=== Ausführung beendet ===");
+        System.out.println("Finaler Stack: " + stack);
+        System.out.println("Finaler Speicher: " + memory);
     }
 }

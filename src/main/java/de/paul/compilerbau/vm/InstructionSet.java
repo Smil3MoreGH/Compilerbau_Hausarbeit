@@ -18,6 +18,7 @@ public class InstructionSet {
     public static final String JZ = "JZ";
     public static final String CALL = "CALL";
     public static final String RET = "RET";
+    public static final String GOTO = "GOTO";
 
     private InstructionSet() {}  // Verhindert Instanziierung
 }
