@@ -1,16 +1,23 @@
 package de.paul.compilerbau.codegen;
 
 import de.paul.compilerbau.parserAST.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CodeGenerator {
 
     private final InstructionList instructions;
+    private final InstructionList functionInstructions;
+    private final InstructionList mainInstructions;
+    private InstructionList currentTarget;
     private final SymbolTable symbolTable;
     private final LabelGenerator labelGenerator;
 
     public CodeGenerator() {
         this.instructions = new InstructionList();
+        this.functionInstructions = new InstructionList();
+        this.mainInstructions = new InstructionList();
+        this.currentTarget = mainInstructions; // Jetzt ist mainInstructions schon da
         this.symbolTable = new SymbolTable();
         this.labelGenerator = new LabelGenerator();
     }
@@ -18,6 +25,13 @@ public class CodeGenerator {
     // Hauptmethode: Startet die Codegenerierung
     public InstructionList generate(ASTNode ast) {
         visit(ast);  // AST traversieren
+
+        // Struktur: GOTO START → alle Funktionen → START: → Hauptprogramm
+        instructions.add("GOTO", "START");
+        instructions.addAll(functionInstructions);
+        instructions.add("START:");
+        instructions.addAll(mainInstructions);
+
         return instructions;
     }
 
@@ -37,127 +51,145 @@ public class CodeGenerator {
     // --- Program Node ---
     private void visitProgram(ASTProgramNode node) {
         for (ASTNode statement : node.getStatements()) {
-            visit(statement);  // Besuche jedes Statement im Programm
+            visit(statement);
         }
     }
 
     // --- Assignment Node ---
     private void visitAssignment(ASTAssignmentNode node) {
-        visit(node.getExpression());                      // Berechne den Wert (PUSH ...)
-        symbolTable.addVariable(node.getVariableName());  // Variable registrieren, falls nicht vorhanden
-        instructions.add("STORE", node.getVariableName()); // Wert speichern
+        visitTo(mainInstructions, node.getExpression());
+        symbolTable.addVariable(node.getVariableName());
+        mainInstructions.add("STORE", node.getVariableName());
     }
 
-    // --- Expression Node (Zahlen & Variablen) ---
+    // --- Expression Node ---
     private void visitExpression(ASTExpressionNode node) {
         String value = node.getValue();
+        InstructionList target = getCurrentInstructionList();
 
-        // Prüfen, ob es eine Zahl oder Variable ist
-        if (value.matches("-?\\d+")) {  // Zahl
-            instructions.add("PUSH", value);
-        } else {                        // Variable
-            instructions.add("LOAD", value);
+        if (value.matches("-?\\d+")) {
+            target.add("PUSH", value);
+        } else {
+            target.add("LOAD", value);
         }
     }
 
     // --- Binary Expression Node ---
     private void visitBinaryExpression(ASTBinaryExpressionNode node) {
-        visit(node.getLeft());   // Linken Operanden berechnen
-        visit(node.getRight());  // Rechten Operanden berechnen
+        InstructionList target = getCurrentInstructionList();
 
-        // Operatoren-Mapping
+        visitTo(target, node.getLeft());
+        visitTo(target, node.getRight());
+
         switch (node.getOperator()) {
-            case "+" -> instructions.add("ADD");
-            case "-" -> instructions.add("SUB");
-            case "*" -> instructions.add("MUL");
-            case "/" -> instructions.add("DIV");
-            case ">" -> instructions.add("GT");
-            case "<" -> instructions.add("LT");
-            case "==" -> instructions.add("EQ");
-            case "!=" -> instructions.add("NEQ");
-            case ">=" -> instructions.add("GTE");
-            case "<=" -> instructions.add("LTE");
+            case "+" -> target.add("ADD");
+            case "-" -> target.add("SUB");
+            case "*" -> target.add("MUL");
+            case "/" -> target.add("DIV");
+            case ">" -> target.add("GT");
+            case "<" -> target.add("LT");
+            case "==" -> target.add("EQ");
+            case "!=" -> target.add("NEQ");
+            case ">=" -> target.add("GTE");
+            case "<=" -> target.add("LTE");
             default -> throw new IllegalArgumentException("Unbekannter Operator: " + node.getOperator());
         }
     }
 
     // --- Function Definition Node ---
     private void visitFunctionDefinition(ASTFunctionDefinitionNode node) {
-        String funcLabel = "FUNC_" + node.getFunctionName();
-        instructions.add(funcLabel + ":");
+        InstructionList oldTarget = currentTarget;
+        currentTarget = functionInstructions;
 
-        // Parameter speichern
+        String funcLabel = "FUNC_" + node.getFunctionName();
+        functionInstructions.add(funcLabel + ":");
+
         List<String> params = node.getParameters();
         for (int i = params.size() - 1; i >= 0; i--) {
-            instructions.add("STORE", params.get(i));
+            functionInstructions.add("STORE", params.get(i));
         }
 
         boolean hasReturn = false;
-
-        // Funktionskörper generieren
         for (ASTNode stmt : node.getBodyStatements()) {
             visit(stmt);
             if (stmt instanceof ASTReturnNode) hasReturn = true;
         }
 
-        // ✅ Nur RET hinzufügen, wenn es kein explizites return gab
         if (!hasReturn) {
-            instructions.add("RET");
+            functionInstructions.add("RET");
         }
+
+        currentTarget = oldTarget;
     }
 
     // --- Function Call Node ---
     private void visitFunctionCall(ASTFunctionCallNode node) {
         for (ASTNode arg : node.getArguments()) {
-            visit(arg);  // Argumente auf den Stack legen
+            visitTo(mainInstructions, arg);
         }
-        instructions.add("CALL", node.getFunctionName()); // Funktionsaufruf
+        mainInstructions.add("CALL", node.getFunctionName());
     }
 
     // --- If-Else Node ---
     private void visitIfElse(ASTIfElseNode node) {
+        InstructionList target = getCurrentInstructionList();
+
         String elseLabel = labelGenerator.generateLabel("ELSE");
         String endLabel = labelGenerator.generateLabel("ENDIF");
 
-        visit(node.getCondition());         // Bedingung evaluieren
-        instructions.add("JZ", elseLabel);  // Falls Bedingung false → Springe zu ELSE
+        visitTo(target, node.getCondition());
+        target.add("JZ", elseLabel);
 
-        // THEN-Block
         for (ASTNode stmt : node.getIfBody()) {
-            visit(stmt);
+            visitTo(target, stmt);
         }
-        instructions.add("JMP", endLabel);  // Nach THEN-Block zum Ende springen
 
-        // ELSE-Block
-        instructions.add(elseLabel + ":");
+        target.add("JMP", endLabel);
+
+        target.add(elseLabel + ":");
         for (ASTNode stmt : node.getElseBody()) {
-            visit(stmt);
+            visitTo(target, stmt);
         }
 
-        instructions.add(endLabel + ":");   // Ende der If-Else-Struktur
+        target.add(endLabel + ":");
     }
 
     // --- While Node ---
     private void visitWhile(ASTWhileNode node) {
+        InstructionList target = getCurrentInstructionList();
+
         String startLabel = labelGenerator.generateLabel("WHILE_START");
         String endLabel = labelGenerator.generateLabel("WHILE_END");
 
-        instructions.add(startLabel + ":"); // Schleifenanfang
-        visit(node.getCondition());         // Bedingung evaluieren
-        instructions.add("JZ", endLabel);   // Falls false → Schleifenende
+        target.add(startLabel + ":");
+        visitTo(target, node.getCondition());
+        target.add("JZ", endLabel);
 
-        // Schleifenrumpf
         for (ASTNode stmt : node.getBodyStatements()) {
-            visit(stmt);
+            visitTo(target, stmt);
         }
 
-        instructions.add("JMP", startLabel); // Zurück zum Anfang
-        instructions.add(endLabel + ":");    // Schleifenende
+        target.add("JMP", startLabel);
+        target.add(endLabel + ":");
     }
 
     // --- Return Node ---
     private void visitReturn(ASTReturnNode node) {
-        visit(node.getReturnValue());  // Wert berechnen
-        instructions.add("RET");       // Rücksprung
+        InstructionList target = getCurrentInstructionList();
+        visitTo(target, node.getReturnValue());
+        target.add("RET");
+    }
+
+    // --- Hilfsmethoden ---
+
+    private InstructionList getCurrentInstructionList() {
+        return currentTarget;
+    }
+
+    private void visitTo(InstructionList target, ASTNode node) {
+        InstructionList oldTarget = currentTarget;
+        currentTarget = target;
+        visit(node);
+        currentTarget = oldTarget;
     }
 }
