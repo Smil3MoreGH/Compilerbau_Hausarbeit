@@ -20,7 +20,7 @@ public class VirtualMachine {
 
     // Startet die VM
     public void run() {
-        System.out.println("=== Starte Ausführung der Virtuellen Maschine ===\n");
+        //System.out.println("=== Starte Ausführung der Virtuellen Maschine ===\n");
 
         // 1. Label-Tabelle vorbereiten (für Sprünge)
         Map<String, Integer> labelMap = new HashMap<>();
@@ -40,8 +40,7 @@ public class VirtualMachine {
             String opcode = instr.getOpcode();
             String arg = instr.getOperand();
 
-            // 🟡 Debug: Aktuelle Instruktion
-            System.out.println("→ Instruktion #" + (instructionPointer - 1) + ": " + instr);
+            //System.out.println("→ Instruktion #" + (instructionPointer - 1) + ": " + instr);
 
             switch (opcode) {
                 case InstructionSet.PUSH:
@@ -50,7 +49,7 @@ public class VirtualMachine {
 
                 case InstructionSet.GOTO:
                     instructionPointer = labelMap.get(arg);
-                    System.out.println("   [GOTO] → springe zu Label " + arg);
+                    //System.out.println("   [GOTO] → springe zu Label " + arg);
                     break;
 
                 case InstructionSet.LOAD:
@@ -64,7 +63,7 @@ public class VirtualMachine {
                     int value = stack.pop();
                     memory.put(arg, value);
                     // 🔵 Debug: Speichervorgang
-                    System.out.println("   [STORE] " + arg + " = " + value);
+                    //System.out.println("   [STORE] " + arg + " = " + value);
                     break;
 
                 case InstructionSet.ADD:
@@ -118,29 +117,29 @@ public class VirtualMachine {
 
                 case InstructionSet.JMP:
                     instructionPointer = labelMap.get(arg);
-                    System.out.println("   [JMP] → springe zu Label " + arg);
+                    //System.out.println("   [JMP] → springe zu Label " + arg);
                     break;
 
                 case InstructionSet.JZ:
                     int condition = stack.pop();
                     if (condition == 0) {
                         instructionPointer = labelMap.get(arg);
-                        System.out.println("   [JZ] Bedingung ist 0 → springe zu " + arg);
+                        //System.out.println("   [JZ] Bedingung ist 0 → springe zu " + arg);
                     } else {
-                        System.out.println("   [JZ] Bedingung ist NICHT 0 → kein Sprung");
+                        //System.out.println("   [JZ] Bedingung ist NICHT 0 → kein Sprung");
                     }
                     break;
 
                 case InstructionSet.CALL:
                     callStack.push(new ExecutionContext(instructionPointer));
                     instructionPointer = labelMap.get("FUNC_" + arg);
-                    System.out.println("   [CALL] → Funktionssprung zu FUNC_" + arg + ":");
+                    //System.out.println("   [CALL] → Funktionssprung zu FUNC_" + arg + ":");
                     break;
 
                 case InstructionSet.RET:
                     ExecutionContext context = callStack.pop();
                     instructionPointer = context.getReturnAddress();
-                    System.out.println("   [RET] → Rücksprung zu #" + instructionPointer);
+                    //System.out.println("   [RET] → Rücksprung zu #" + instructionPointer);
                     break;
 
                 default:
@@ -152,7 +151,7 @@ public class VirtualMachine {
             }
 
             // 🟢 Debug: Stack nach jedem Schritt
-            System.out.println("   [STACK] " + stack + "\n");
+            //System.out.println("   [STACK] " + stack + "\n");
         }
 
         // 🏁 Endausgabe

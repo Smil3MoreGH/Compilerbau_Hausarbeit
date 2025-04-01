@@ -42,7 +42,7 @@ public class CodeGenerator {
             return;
         }
 
-        System.out.println("Besuche Knoten vom Typ: " + node.getClass().getSimpleName());
+        //System.out.println("Besuche Knoten vom Typ: " + node.getClass().getSimpleName());
 
         if (node instanceof ASTProgramNode) visitProgram((ASTProgramNode) node);
         else if (node instanceof ASTAssignmentNode) visitAssignment((ASTAssignmentNode) node);
@@ -67,7 +67,7 @@ public class CodeGenerator {
 
     // --- Assignment Node ---
     private void visitAssignment(ASTAssignmentNode node) {
-        System.out.println("Verarbeite Zuweisung an Variable: " + node.getVariableName());
+        //System.out.println("Verarbeite Zuweisung an Variable: " + node.getVariableName());
         visitTo(currentTarget, node.getExpression());
         symbolTable.addVariable(node.getVariableName());
         currentTarget.add("STORE", node.getVariableName());
@@ -75,7 +75,7 @@ public class CodeGenerator {
 
     private void visitExpression(ASTExpressionNode node) {
         String value = node.getValue();
-        System.out.println("Verarbeite Expression: " + value);
+        //System.out.println("Verarbeite Expression: " + value);
         InstructionList target = getCurrentInstructionList();
 
         if (value.matches("-?\\d+")) {
@@ -86,7 +86,7 @@ public class CodeGenerator {
     }
 
     private void visitBinaryExpression(ASTBinaryExpressionNode node) {
-        System.out.println("Verarbeite binären Ausdruck: " + node.getOperator());
+        //System.out.println("Verarbeite binären Ausdruck: " + node.getOperator());
         InstructionList target = getCurrentInstructionList();
 
         visitTo(target, node.getLeft());
@@ -108,7 +108,7 @@ public class CodeGenerator {
     }
 
     private void visitFunctionDefinition(ASTFunctionDefinitionNode node) {
-        System.out.println("Definiere Funktion: " + node.getFunctionName());
+        //System.out.println("Definiere Funktion: " + node.getFunctionName());
         InstructionList oldTarget = currentTarget;
         currentTarget = functionInstructions;
 
@@ -116,7 +116,7 @@ public class CodeGenerator {
         functionInstructions.add(funcLabel + ":");
 
         List<String> params = node.getParameters();
-        System.out.println("Funktionsparameter: " + params);
+        //System.out.println("Funktionsparameter: " + params);
         for (int i = params.size() - 1; i >= 0; i--) {
             functionInstructions.add("STORE", params.get(i));
         }
@@ -135,7 +135,7 @@ public class CodeGenerator {
     }
 
     private void visitFunctionCall(ASTFunctionCallNode node) {
-        System.out.println("Funktionsaufruf: " + node.getFunctionName() + " mit Argumenten: " + node.getArguments().size());
+        //System.out.println("Funktionsaufruf: " + node.getFunctionName() + " mit Argumenten: " + node.getArguments().size());
         for (ASTNode arg : node.getArguments()) {
             visitTo(mainInstructions, arg);
         }
@@ -143,7 +143,7 @@ public class CodeGenerator {
     }
 
     private void visitIfElse(ASTIfElseNode node) {
-        System.out.println("Verarbeite If-Else-Struktur");
+        //System.out.println("Verarbeite If-Else-Struktur");
         InstructionList target = getCurrentInstructionList();
 
         String elseLabel = labelGenerator.generateLabel("ELSE");
@@ -152,7 +152,7 @@ public class CodeGenerator {
         visitTo(target, node.getCondition());
         target.add("JZ", elseLabel);
 
-        System.out.println("If-Block:");
+        //System.out.println("If-Block:");
         for (ASTNode stmt : node.getIfBody()) {
             visitTo(target, stmt);
         }
@@ -160,7 +160,7 @@ public class CodeGenerator {
         target.add("JMP", endLabel);
 
         target.add(elseLabel + ":");
-        System.out.println("Else-Block:");
+        //System.out.println("Else-Block:");
         for (ASTNode stmt : node.getElseBody()) {
             visitTo(target, stmt);
         }
@@ -169,7 +169,7 @@ public class CodeGenerator {
     }
 
     private void visitWhile(ASTWhileNode node) {
-        System.out.println("Verarbeite While-Schleife");
+        //System.out.println("Verarbeite While-Schleife");
         InstructionList target = getCurrentInstructionList();
 
         String startLabel = labelGenerator.generateLabel("WHILE_START");
@@ -188,7 +188,7 @@ public class CodeGenerator {
     }
 
     private void visitReturn(ASTReturnNode node) {
-        System.out.println("Verarbeite Rückgabe");
+        //System.out.println("Verarbeite Rückgabe");
         InstructionList target = getCurrentInstructionList();
         visitTo(target, node.getReturnValue());
         target.add("RET");

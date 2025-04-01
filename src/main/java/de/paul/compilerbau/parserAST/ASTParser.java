@@ -13,25 +13,25 @@ public class ASTParser {
     }
 
     public ASTNode parse() {
-        System.out.println("Starte Parsing...");
+        //System.out.println("Starte Parsing...");
         return parseProgram();
     }
 
     private ASTNode parseProgram() {
         ASTProgramNode root = new ASTProgramNode();
-        System.out.println("Beginne Programmanalyse");
+        //System.out.println("Beginne Programmanalyse");
 
         // Solange wir nicht am Ende (EOF) sind, hole Statements
         while (!match(TokenType.EOF)) {
             root.addChild(parseStatement());
         }
-        System.out.println("Parsing abgeschlossen!");
+        //System.out.println("Parsing abgeschlossen!");
         return root;
     }
 
     private ASTNode parseStatement() {
         // Print zum debuggen um zu schauen was wie erkannt wurde
-        System.out.println("parseProgram(): Position " + position + " | Token: " + peek());
+        //System.out.println("parseProgram(): Position " + position + " | Token: " + peek());
         if (lookAhead(TokenType.VAR)) {
             return parseAssignment();
         } else if (lookAhead(TokenType.IDENTIFIER) && lookAhead(1, TokenType.ASSIGN)) {
