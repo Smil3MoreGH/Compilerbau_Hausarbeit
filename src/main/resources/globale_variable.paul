@@ -1,0 +1,7 @@
+var base = 100;
+
+fun getBasePlus(n) {
+    return base + n;
+}
+
+var sum = getBasePlus(23);

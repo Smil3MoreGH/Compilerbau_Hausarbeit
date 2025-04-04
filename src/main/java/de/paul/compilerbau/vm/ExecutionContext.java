@@ -25,6 +25,14 @@ public class ExecutionContext {
         return variables.get(name);
     }
 
+    public boolean hasVariable(String name) {
+        return variables.containsKey(name);
+    }
+
+    public Map<String, Integer> getVariables() {
+        return variables;
+    }
+
     public int getReturnAddress() {
         return returnAddress;
     }

@@ -1,0 +1,6 @@
+fun mul(x, y) {
+    var result = x * y;
+    return result;
+}
+
+var z = mul(4, 5);

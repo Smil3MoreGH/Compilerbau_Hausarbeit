@@ -20,8 +20,6 @@ public class VirtualMachine {
 
     // Startet die VM
     public void run() {
-        //System.out.println("=== Starte Ausführung der Virtuellen Maschine ===\n");
-
         // 1. Label-Tabelle vorbereiten (für Sprünge)
         Map<String, Integer> labelMap = new HashMap<>();
         for (int i = 0; i < instructions.size(); i++) {
@@ -40,7 +38,7 @@ public class VirtualMachine {
             String opcode = instr.getOpcode();
             String arg = instr.getOperand();
 
-            //System.out.println("→ Instruktion #" + (instructionPointer - 1) + ": " + instr);
+            printState(instr.toString());
 
             switch (opcode) {
                 case InstructionSet.PUSH:
@@ -53,6 +51,16 @@ public class VirtualMachine {
                     break;
 
                 case InstructionSet.LOAD:
+                    if (!callStack.isEmpty()) {
+                        ExecutionContext ctx = callStack.peek();
+                        try {
+                            stack.push(ctx.loadVariable(arg));
+                            break;
+                        } catch (IllegalStateException e) {
+                            // Fällt durch zum globalen Speicher
+                        }
+                    }
+                    // Fallback: global
                     if (!memory.containsKey(arg)) {
                         throw new RuntimeException("Variable nicht definiert: " + arg);
                     }
@@ -61,9 +69,12 @@ public class VirtualMachine {
 
                 case InstructionSet.STORE:
                     int value = stack.pop();
-                    memory.put(arg, value);
-                    // 🔵 Debug: Speichervorgang
-                    //System.out.println("   [STORE] " + arg + " = " + value);
+                    if (!callStack.isEmpty()) {
+                        ExecutionContext ctx = callStack.peek();
+                        ctx.storeVariable(arg, value);
+                    } else {
+                        memory.put(arg, value);
+                    }
                     break;
 
                 case InstructionSet.ADD:
@@ -149,14 +160,25 @@ public class VirtualMachine {
                     // Labels werden nicht ausgeführt, daher keine Aktion
                     break;
             }
-
-            // 🟢 Debug: Stack nach jedem Schritt
-            //System.out.println("   [STACK] " + stack + "\n");
         }
 
         // 🏁 Endausgabe
         System.out.println("=== Ausführung beendet ===");
         System.out.println("Finaler Stack: " + stack);
         System.out.println("Finaler Speicher: " + memory);
+    }
+    private void printState(String instrText) {
+        System.out.println("→ Instruktion #" + (instructionPointer - 1) + ": " + instrText);
+        System.out.println("   Stack: " + stack);
+
+        if (!callStack.isEmpty()) {
+            ExecutionContext ctx = callStack.peek();
+            if (!ctx.getVariables().isEmpty()) {
+                System.out.println("   Lokale Variablen: " + ctx.getVariables());
+            }
+        }
+
+        System.out.println("   Globale Variablen: " + memory);
+        System.out.println();
     }
 }

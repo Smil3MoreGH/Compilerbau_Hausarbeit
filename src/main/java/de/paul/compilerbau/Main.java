@@ -14,7 +14,7 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
         // Code laden
-        String sourceCode = FileLoader.loadFile("test.paul");
+        String sourceCode = FileLoader.loadFile("globale_variable.paul");
 
         // Scanner: Code → Tokens
         Scanner scanner = new Scanner(sourceCode);

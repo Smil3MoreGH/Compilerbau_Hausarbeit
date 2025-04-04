@@ -1,0 +1,15 @@
+var start = 2;
+
+fun double(x) {
+    return x * 2;
+}
+
+var current = double(start);
+
+while (current < 20) {
+    current = current + 3;
+
+    if (current > 15) {
+        current = current - 1;
+    }
+}
