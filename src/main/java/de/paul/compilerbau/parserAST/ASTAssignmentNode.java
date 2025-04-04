@@ -1,7 +1,7 @@
 package de.paul.compilerbau.parserAST;
 
 /**
- * AST-Knoten für eine Zuweisung (z. B. x = 5).
+ * AST-Knoten für eine Zuweisung (z.B. x = 5).
  */
 public class ASTAssignmentNode extends ASTNode {
     private final String variableName;
