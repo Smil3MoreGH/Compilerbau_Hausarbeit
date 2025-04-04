@@ -3,6 +3,9 @@ package de.paul.compilerbau.parserAST;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * AST-Knoten für eine Funktionsdefinition.
+ */
 public class ASTFunctionDefinitionNode extends ASTNode {
     private final String functionName;
     private final List<String> parameters = new ArrayList<>();
@@ -12,10 +15,12 @@ public class ASTFunctionDefinitionNode extends ASTNode {
         this.functionName = functionName;
     }
 
+    // Fügt einen Funktionsparameter hinzu
     public void addParameter(String param) {
         parameters.add(param);
     }
 
+    // Fügt ein Statement zum Funktionsrumpf hinzu
     public void addBodyStatement(ASTNode stmt) {
         bodyStatements.add(stmt);
     }

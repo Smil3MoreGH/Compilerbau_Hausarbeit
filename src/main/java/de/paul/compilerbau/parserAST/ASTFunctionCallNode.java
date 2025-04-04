@@ -3,6 +3,9 @@ package de.paul.compilerbau.parserAST;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * AST-Knoten für einen Funktionsaufruf.
+ */
 public class ASTFunctionCallNode extends ASTNode {
     private final String functionName;
     private final List<ASTNode> arguments = new ArrayList<>();
@@ -11,6 +14,7 @@ public class ASTFunctionCallNode extends ASTNode {
         this.functionName = functionName;
     }
 
+    // Fügt ein Argument zum Funktionsaufruf hinzu
     public void addArgument(ASTNode arg) {
         arguments.add(arg);
     }

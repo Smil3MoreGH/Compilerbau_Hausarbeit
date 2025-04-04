@@ -3,8 +3,11 @@ package de.paul.compilerbau.parserAST;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * AST-Knoten für eine if-else-Bedingung.
+ */
 public class ASTIfElseNode extends ASTNode {
-    private final ASTNode condition;
+    private final ASTNode condition; // Bedingung (z.B. x < 5)
     private final List<ASTNode> ifBody = new ArrayList<>();
     private final List<ASTNode> elseBody = new ArrayList<>();
 
@@ -12,10 +15,12 @@ public class ASTIfElseNode extends ASTNode {
         this.condition = condition;
     }
 
+    // Fügt ein Statement zum if-Block hinzu
     public void addIfBody(ASTNode stmt) {
         ifBody.add(stmt);
     }
 
+    // Fügt ein Statement zum else-Block hinzu
     public void addElseBody(ASTNode stmt) {
         elseBody.add(stmt);
     }

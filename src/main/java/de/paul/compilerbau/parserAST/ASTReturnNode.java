@@ -1,5 +1,8 @@
 package de.paul.compilerbau.parserAST;
 
+/**
+ * AST-Knoten für ein return-Statement.
+ */
 public class ASTReturnNode extends ASTNode {
     private final ASTNode returnValue;
 
@@ -7,6 +10,7 @@ public class ASTReturnNode extends ASTNode {
         this.returnValue = returnValue;
     }
 
+    // Gibt den Rückgabewert des return-Statements zurück
     public ASTNode getReturnValue() {
         return returnValue;
     }

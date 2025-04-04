@@ -1,5 +1,8 @@
 package de.paul.compilerbau.parserAST;
 
+/**
+ * AST-Knoten für binäre Ausdrücke (z. B. a + b, x < y).
+ */
 public class ASTBinaryExpressionNode extends ASTNode {
     private final ASTNode left;
     private final String operator;

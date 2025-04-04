@@ -1,5 +1,8 @@
 package de.paul.compilerbau.parserAST;
 
+/**
+ * AST-Knoten für einen Ausdruck (z. B. Variable oder Konstante).
+ */
 public class ASTExpressionNode extends ASTNode {
     private final String value;
 

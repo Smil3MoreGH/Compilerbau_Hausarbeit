@@ -4,34 +4,35 @@ import de.paul.compilerbau.scanner.Token;
 import de.paul.compilerbau.scanner.TokenType;
 import java.util.List;
 
+/**
+ * Wandelt eine Liste von Tokens in einen abstrakten Syntaxbaum (AST) um.
+ */
 public class ASTParser {
     private final List<Token> tokens;
-    private int position = 0; // Aktuelle Position in der Token-Liste
+    private int position = 0; // Aktuelle Position in der Tokenliste
 
     public ASTParser(List<Token> tokens) {
         this.tokens = tokens;
     }
 
+    // Einstiegspunkt für das Parsen
     public ASTNode parse() {
-        //System.out.println("Starte Parsing...");
         return parseProgram();
     }
 
+    // Parsen eines gesamten Programms (besteht aus beliebig vielen Statements)
     private ASTNode parseProgram() {
         ASTProgramNode root = new ASTProgramNode();
-        //System.out.println("Beginne Programmanalyse");
 
-        // Solange wir nicht am Ende (EOF) sind, hole Statements
+        // Solange wir nicht das Ende erreichen, werden Statements geparst
         while (!match(TokenType.EOF)) {
             root.addChild(parseStatement());
         }
-        //System.out.println("Parsing abgeschlossen!");
         return root;
     }
 
+    // Parsen eines einzelnen Statements
     private ASTNode parseStatement() {
-        // Print zum debuggen um zu schauen was wie erkannt wurde
-        //System.out.println("parseProgram(): Position " + position + " | Token: " + peek());
         if (lookAhead(TokenType.VAR)) {
             return parseAssignment();
         } else if (lookAhead(TokenType.IDENTIFIER) && lookAhead(1, TokenType.ASSIGN)) {
@@ -52,8 +53,9 @@ public class ASTParser {
         }
     }
 
+    // Parsen einer Variablenzuweisung (mit optionalem 'var')
     private ASTNode parseAssignment() {
-        boolean hasVar = match(TokenType.VAR);
+        boolean hasVar = match(TokenType.VAR); // kann optional sein
         Token identifier = consume(TokenType.IDENTIFIER, "Variablenname erwartet");
         consume(TokenType.ASSIGN, "Erwartet '='");
         ASTNode expression = parseExpression();
@@ -61,6 +63,7 @@ public class ASTParser {
         return new ASTAssignmentNode(identifier.getValue(), expression);
     }
 
+    // Ausdrucksparsing
     private ASTNode parseExpression() {
         ASTNode term = parseTerm();
         return parseExpressionTail(term);
@@ -76,6 +79,7 @@ public class ASTParser {
         return left;
     }
 
+    // Parsing von Multiplikation/Division (höhere Priorität als + / -)
     private ASTNode parseTerm() {
         ASTNode factor = parseFactor();
         return parseTermTail(factor);
@@ -91,6 +95,7 @@ public class ASTParser {
         return left;
     }
 
+    // Parsen einzelner Werte: Zahlen, Variablen, Klammerausdrücke oder Funktionsaufrufe
     private ASTNode parseFactor() {
         if (match(TokenType.NUMBER)) {
             return new ASTExpressionNode(tokens.get(position - 1).getValue());
@@ -109,6 +114,7 @@ public class ASTParser {
         }
     }
 
+    // Parsen eines Vergleichsausdrucks
     private ASTNode parseComparison() {
         ASTNode left = parseExpression();
         if (match(TokenType.GT) || match(TokenType.LT) || match(TokenType.GTE) || match(TokenType.LTE) || match(TokenType.EQ) || match(TokenType.NEQ)) {
@@ -119,6 +125,7 @@ public class ASTParser {
         return left;
     }
 
+    // Parsen einer Funktionsdefinition
     private ASTNode parseFunctionDefinition() {
         consume(TokenType.FUN, "Erwartet 'fun'");
         Token functionName = consume(TokenType.IDENTIFIER, "Funktionsname erwartet");
@@ -130,12 +137,14 @@ public class ASTParser {
         consume(TokenType.RPAREN, "Erwartet ')' ");
         consume(TokenType.LBRACE, "Erwartet '{'");
 
+        // Funktionsrumpf
         while (!match(TokenType.RBRACE)) {
             functionNode.addBodyStatement(parseStatement());
         }
         return functionNode;
     }
 
+    // Parameterliste in Funktionsdefinition
     private void parseParameterList(ASTFunctionDefinitionNode functionNode) {
         if (lookAhead(TokenType.IDENTIFIER)) {
             functionNode.addParameter(consume(TokenType.IDENTIFIER, "Parameter erwartet").getValue());
@@ -150,6 +159,7 @@ public class ASTParser {
         }
     }
 
+    // Parsen eines Funktionsaufrufs mit Argumenten
     private ASTNode parseFunctionCall(Token functionNameToken) {
         consume(TokenType.LPAREN, "Erwartet '(' für Funktionsaufruf");
         ASTFunctionCallNode callNode = new ASTFunctionCallNode(functionNameToken.getValue());
@@ -172,6 +182,7 @@ public class ASTParser {
         }
     }
 
+    // Parsen eines If-Else-Statements
     private ASTNode parseIfElse() {
         consume(TokenType.IF, "Erwartet 'if'");
         consume(TokenType.LPAREN, "Erwartet '(' ");
@@ -193,20 +204,22 @@ public class ASTParser {
         return ifNode;
     }
 
+    // Parsen einer While-Schleife
     private ASTNode parseWhile() {
         consume(TokenType.WHILE, "Erwartet 'while'");
         consume(TokenType.LPAREN, "Erwartet '(' ");
         ASTNode condition = parseComparison();
         consume(TokenType.RPAREN, "Erwartet ')' ");
 
-        ASTWhileNode ASTWhileNode = new ASTWhileNode(condition);
+        ASTWhileNode whileNode = new ASTWhileNode(condition);
         consume(TokenType.LBRACE, "Erwartet '{'");
         while (!match(TokenType.RBRACE)) {
-            ASTWhileNode.addBodyStatement(parseStatement());
+            whileNode.addBodyStatement(parseStatement());
         }
-        return ASTWhileNode;
+        return whileNode;
     }
 
+    // Parsen eines Return-Statements
     private ASTNode parseReturn() {
         consume(TokenType.RETURN, "Erwartet 'return'");
         ASTNode expression = parseExpression();
@@ -214,6 +227,7 @@ public class ASTParser {
         return new ASTReturnNode(expression);
     }
 
+    // Versucht, einen bestimmten Token zu "matchen" (und zu verbrauchen)
     private boolean match(TokenType type) {
         if (position < tokens.size() && tokens.get(position).getType() == type) {
             position++;
@@ -222,6 +236,7 @@ public class ASTParser {
         return false;
     }
 
+    // Konsumiert einen bestimmten Token oder wirft Fehler
     private Token consume(TokenType type, String errorMessage) {
         if (match(type)) {
             return tokens.get(position - 1);
@@ -229,14 +244,17 @@ public class ASTParser {
         throw new RuntimeException(errorMessage + " in Zeile " + peek().getLine());
     }
 
+    // Gibt den aktuellen Token zurück
     private Token peek() {
         return tokens.get(position);
     }
 
+    // Vorschau auf Token (ohne ihn zu konsumieren)
     private boolean lookAhead(TokenType type) {
         return position < tokens.size() && tokens.get(position).getType() == type;
     }
 
+    // Vorschau auf Token mit Offset
     private boolean lookAhead(int offset, TokenType type) {
         return (position + offset < tokens.size()) && (tokens.get(position + offset).getType() == type);
     }

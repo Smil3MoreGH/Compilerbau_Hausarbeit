@@ -3,6 +3,9 @@ package de.paul.compilerbau.scanner;
 import java.io.*;
 import java.util.*;
 
+/**
+ * Wandelt Quellcode in eine Liste von Tokens zur weiteren syntaktischen Analyse um.
+ */
 public class Scanner {
     private final String input;  // Eingabequelle (Quellcode als String)
     private int position = 0;    // Aktuelle Position im Eingabestring
