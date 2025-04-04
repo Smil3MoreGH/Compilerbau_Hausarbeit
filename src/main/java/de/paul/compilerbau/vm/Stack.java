@@ -3,15 +3,16 @@ package de.paul.compilerbau.vm;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+/**
+ * Eigene Stack-Implementierung für die VM zur besseren Kontrolle und Fehlermeldung.
+ */
 public class Stack {
     private final Deque<Integer> stack = new ArrayDeque<>();
 
-    // ✅ Wert auf den Stack legen
     public void push(int value) {
         stack.push(value);
     }
 
-    // ✅ Wert vom Stack holen
     public int pop() {
         if (stack.isEmpty()) {
             throw new IllegalStateException("Stack underflow: Versuch, von leerem Stack zu lesen!");
@@ -19,7 +20,6 @@ public class Stack {
         return stack.pop();
     }
 
-    // ✅ Letzter Wert ohne Entfernen ansehen
     public int peek() {
         if (stack.isEmpty()) {
             throw new IllegalStateException("Stack is empty: Kein Wert zum Anzeigen!");
@@ -27,12 +27,10 @@ public class Stack {
         return stack.peek();
     }
 
-    // ✅ Stack leeren (optional)
     public void clear() {
         stack.clear();
     }
 
-    // ✅ Stackgröße (Debug)
     public int size() {
         return stack.size();
     }

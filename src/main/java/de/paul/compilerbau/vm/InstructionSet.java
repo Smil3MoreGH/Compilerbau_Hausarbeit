@@ -1,5 +1,9 @@
 package de.paul.compilerbau.vm;
 
+/**
+ * Definition aller unterstützten Befehle der virtuellen Maschine.
+ * Wird als Konstantensammlung genutzt, um Tippfehler in Strings zu vermeiden.
+ */
 public class InstructionSet {
     public static final String PUSH = "PUSH";
     public static final String LOAD = "LOAD";
@@ -20,5 +24,5 @@ public class InstructionSet {
     public static final String RET = "RET";
     public static final String GOTO = "GOTO";
 
-    private InstructionSet() {}  // Verhindert Instanziierung
+    private InstructionSet() {} // Verhindert Instanziierung dieser Utility-Klasse
 }
