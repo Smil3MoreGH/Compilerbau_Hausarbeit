@@ -14,7 +14,7 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
         // Code laden
-        String sourceCode = FileLoader.loadFile("globale_variable.paul");
+        String sourceCode = FileLoader.loadFile("rekursive_funktion.paul");
 
         // Scanner: Code → Tokens
         Scanner scanner = new Scanner(sourceCode);

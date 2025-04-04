@@ -1,7 +1,6 @@
 package de.paul.compilerbau.codegen;
 
 import de.paul.compilerbau.parserAST.*;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -49,17 +48,17 @@ public class CodeGenerator {
             return;
         }
 
-        if (node instanceof ASTProgramNode) visitProgram((ASTProgramNode) node);
-        else if (node instanceof ASTAssignmentNode) visitAssignment((ASTAssignmentNode) node);
-        else if (node instanceof ASTBinaryExpressionNode) visitBinaryExpression((ASTBinaryExpressionNode) node);
-        else if (node instanceof ASTExpressionNode) visitExpression((ASTExpressionNode) node);
-        else if (node instanceof ASTFunctionDefinitionNode) visitFunctionDefinition((ASTFunctionDefinitionNode) node);
-        else if (node instanceof ASTFunctionCallNode) visitFunctionCall((ASTFunctionCallNode) node);
-        else if (node instanceof ASTIfElseNode) visitIfElse((ASTIfElseNode) node);
-        else if (node instanceof ASTWhileNode) visitWhile((ASTWhileNode) node);
-        else if (node instanceof ASTReturnNode) visitReturn((ASTReturnNode) node);
-        else {
-            System.out.println("Unbekannter AST-Knoten: " + node);
+        switch (node) {
+            case ASTProgramNode astProgramNode -> visitProgram(astProgramNode);
+            case ASTAssignmentNode astAssignmentNode -> visitAssignment(astAssignmentNode);
+            case ASTBinaryExpressionNode astBinaryExpressionNode -> visitBinaryExpression(astBinaryExpressionNode);
+            case ASTExpressionNode astExpressionNode -> visitExpression(astExpressionNode);
+            case ASTFunctionDefinitionNode astFunctionDefinitionNode -> visitFunctionDefinition(astFunctionDefinitionNode);
+            case ASTFunctionCallNode astFunctionCallNode -> visitFunctionCall(astFunctionCallNode);
+            case ASTIfElseNode astIfElseNode -> visitIfElse(astIfElseNode);
+            case ASTWhileNode astWhileNode -> visitWhile(astWhileNode);
+            case ASTReturnNode astReturnNode -> visitReturn(astReturnNode);
+            default -> System.out.println("Unbekannter AST-Knoten: " + node);
         }
     }
 
@@ -138,9 +137,9 @@ public class CodeGenerator {
 
     private void visitFunctionCall(ASTFunctionCallNode node) {
         for (ASTNode arg : node.getArguments()) {
-            visitTo(mainInstructions, arg);
+            visitTo(currentTarget, arg); // statt mainInstructions
         }
-        mainInstructions.add("CALL", node.getFunctionName());
+        currentTarget.add("CALL", node.getFunctionName()); // statt mainInstructions
     }
 
     private void visitIfElse(ASTIfElseNode node) {
