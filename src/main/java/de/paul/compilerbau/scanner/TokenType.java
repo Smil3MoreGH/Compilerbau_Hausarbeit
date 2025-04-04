@@ -1,21 +1,24 @@
 package de.paul.compilerbau.scanner;
 
+/**
+ * Aufzählung aller unterstützten Token-Typen.
+ */
 public enum TokenType {
-    // Schlüsselwörter
+    // Schlüsselwörter der Sprache
     VAR, FUN, RETURN, IF, ELSE, WHILE,
 
-    // Operatoren
+    // Arithmetische Operatoren
     PLUS, MINUS, MULT, DIV, ASSIGN,
 
     // Vergleichsoperatoren
     EQ, NEQ, LT, GT, LTE, GTE,
 
-    // Struktur
+    // Strukturzeichen (z. B. Klammern, Semikolon, etc.)
     LPAREN, RPAREN, LBRACE, RBRACE, SEMI, COMMA,
 
-    // Werte
+    // Literale und Identifier
     NUMBER, IDENTIFIER,
 
-    // Sonstiges
-    EOF  // Ende der Datei
+    // Dateiende (End of File)
+    EOF
 }

@@ -4,14 +4,15 @@ import java.io.*;
 import java.util.*;
 
 public class Scanner {
-    private final String input;  // Quellcode als String
-    private int position = 0;    // Aktuelle Zeichenposition
-    private int line = 1;        // Zeilennummer für Fehlermeldungen
+    private final String input;  // Eingabequelle (Quellcode als String)
+    private int position = 0;    // Aktuelle Position im Eingabestring
+    private int line = 1;        // Aktuelle Zeilennummer (für Fehlermeldungen)
 
+    // Schlüsselwörter der Sprache und zugehörige Token-Typen
     private static final Map<String, TokenType> keywords = new HashMap<>();
 
     static {
-        // Definiere alle Schlüsselwörter der Sprache PAUL
+        // Initialisierung der unterstützten Schlüsselwörter
         keywords.put("var", TokenType.VAR);
         keywords.put("fun", TokenType.FUN);
         keywords.put("return", TokenType.RETURN);
@@ -24,48 +25,51 @@ public class Scanner {
         this.input = input;
     }
 
+    // Führt die lexikalische Analyse durch und liefert eine Tokenliste
     public List<Token> scan() {
         List<Token> tokens = new ArrayList<>();
 
         while (position < input.length()) {
             char current = input.charAt(position);
 
-            // Ignoriere Leerzeichen und Tabs
+            // Überspringe Leerzeichen und Zeilenumbrüche
             if (Character.isWhitespace(current)) {
                 if (current == '\n') {
-                    line++;
+                    line++;  // Zeilenzähler erhöhen
                 }
                 position++;
                 continue;
             }
 
-            // Identifikatoren & Schlüsselwörter
+            // Verarbeite Identifier oder Schlüsselwörter
             if (Character.isLetter(current)) {
                 tokens.add(matchKeywordOrIdentifier());
                 continue;
             }
 
-            // Zahlen
+            // Verarbeite Zahlenliterale
             if (Character.isDigit(current)) {
                 tokens.add(matchNumber());
                 continue;
             }
 
-            // Operatoren und Sonderzeichen
+            // Verarbeite Operatoren und Sonderzeichen
             Token opToken = matchOperator();
             if (opToken != null) {
                 tokens.add(opToken);
                 continue;
             }
 
+            // Fehler bei unbekannten Zeichen
             throw new RuntimeException("Unbekanntes Zeichen: " + current + " in Zeile " + line);
         }
 
-        // Am Ende ein EOF-Token anhängen
+        // Hänge abschließendes EOF-Token an
         tokens.add(new Token(TokenType.EOF, "", line));
         return tokens;
     }
 
+    // Erkennt Identifier oder Schlüsselwörter
     private Token matchKeywordOrIdentifier() {
         int start = position;
         while (position < input.length() && Character.isLetterOrDigit(input.charAt(position))) {
@@ -76,6 +80,7 @@ public class Scanner {
         return new Token(type, word, line);
     }
 
+    // Erkennt Ganzzahlen
     private Token matchNumber() {
         int start = position;
         while (position < input.length() && Character.isDigit(input.charAt(position))) {
@@ -85,6 +90,7 @@ public class Scanner {
         return new Token(TokenType.NUMBER, number, line);
     }
 
+    // Erkennt Operatoren und Sonderzeichen (+, -, ==, !=, etc.)
     private Token matchOperator() {
         char current = input.charAt(position);
         position++;
@@ -125,6 +131,6 @@ public class Scanner {
             case ';': return new Token(TokenType.SEMI, ";", line);
             case ',': return new Token(TokenType.COMMA, ",", line);
         }
-        return null;
+        return null;  // Kein gültiger Operator erkannt
     }
 }
