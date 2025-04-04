@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class MultiFileRunner {
+    private static final boolean waitForUser = true;
+
     public static void main(String[] args) throws IOException {
         Path dir = Paths.get("src/main/resources");
 
@@ -36,22 +38,37 @@ public class MultiFileRunner {
         Scanner scanner = new Scanner(sourceCode);
         List<Token> tokens = scanner.scan();
 
+        wait("Parser starten...");
         ASTParser parser = new ASTParser(tokens);
         ASTNode ast = parser.parse();
 
         System.out.println("\nParser-Output (AST):");
         System.out.println(ast.toString(0));
+        wait("Codegenerator starten...");
 
         CodeGenerator codeGenerator = new CodeGenerator();
         InstructionList instructions = codeGenerator.generate(ast);
 
         System.out.println("\nZwischencode:");
         System.out.println(instructions);
+        wait("Virtuelle Maschine starten...");
 
         System.out.println("\nStarte Virtuelle Maschine...");
         VirtualMachine vm = new VirtualMachine(instructions);
         vm.run();
 
         System.out.println("Test abgeschlossen für: " + path.getFileName());
+        wait("Weiter zur nächsten Datei...");
+    }
+
+    private static void wait(String message) {
+        if (!waitForUser) return;
+
+        System.out.println(message);
+        System.out.print("[Drücke ENTER zum Fortfahren]");
+        try {
+            System.in.read();
+        } catch (IOException ignored) {}
+        System.out.println();
     }
 }
